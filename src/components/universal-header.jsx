@@ -7,7 +7,8 @@ export function UniversalHeader() {
   const pathname = location.pathname;
   const navigate = useNavigate();
   // Don't show header on login page
-  if (pathname === "/")
+  // Don't show header on login page or control tower (as it has its own shell)
+  if (pathname === "/" || pathname === "/login")
     return null;
   const handleSignOut = () => {
     navigate("/");
