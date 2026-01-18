@@ -24,6 +24,7 @@ const ScenarioPlanningPage = React.lazy(() => import('@/app/scenario-planning/pa
 
 
 
+
 // Layout wrapper
 const Layout = ({ children }) => {
     return (
@@ -52,6 +53,7 @@ export default function App() {
                         <Route path="/forecast-engine" element={<ForecastEnginePage />} />
                         <Route path="/scenario-planning" element={<ScenarioPlanningPage />} />
                         <Route path="/login" element={<LoginPage />} />
+
 
 
 
