@@ -23,25 +23,54 @@ import {
 // Mock Data
 const TREND_OVER_TIME = [
     { date: 'Jan 01', score: 45, baseline: 50 },
+    { date: 'Jan 02', score: 46, baseline: 50 },
+    { date: 'Jan 03', score: 47, baseline: 50 },
+    { date: 'Jan 04', score: 45, baseline: 50 },
     { date: 'Jan 05', score: 48, baseline: 50 },
+    { date: 'Jan 06', score: 50, baseline: 50 },
+    { date: 'Jan 07', score: 52, baseline: 50 },
+    { date: 'Jan 08', score: 53, baseline: 51 },
+    { date: 'Jan 09', score: 54, baseline: 51 },
     { date: 'Jan 10', score: 55, baseline: 51 },
+    { date: 'Jan 11', score: 58, baseline: 51 },
+    { date: 'Jan 12', score: 60, baseline: 51 },
+    { date: 'Jan 13', score: 63, baseline: 51 },
+    { date: 'Jan 14', score: 65, baseline: 52 },
     { date: 'Jan 15', score: 68, baseline: 52 },
+    { date: 'Jan 16', score: 70, baseline: 52 },
+    { date: 'Jan 17', score: 72, baseline: 52 },
+    { date: 'Jan 18', score: 74, baseline: 52 },
+    { date: 'Jan 19', score: 73, baseline: 52 },
     { date: 'Jan 20', score: 75, baseline: 52 },
+    { date: 'Jan 21', score: 78, baseline: 53 },
+    { date: 'Jan 22', score: 79, baseline: 53 },
+    { date: 'Jan 23', score: 80, baseline: 53 },
+    { date: 'Jan 24', score: 81, baseline: 53 },
     { date: 'Jan 25', score: 82, baseline: 53 },
+    { date: 'Jan 26', score: 81, baseline: 53 },
+    { date: 'Jan 27', score: 80, baseline: 53 },
+    { date: 'Jan 28', score: 79, baseline: 53 },
+    { date: 'Jan 29', score: 79, baseline: 53 },
     { date: 'Jan 30', score: 80, baseline: 53 },
 ];
 
 const HEATMAP_DATA = [
-    { city: "New York", products: [{ name: "Bevs", score: 85 }, { name: "Snacks", score: 60 }, { name: "Home", score: 30 }, { name: "Elec", score: 45 }] },
-    { city: "Austin", products: [{ name: "Bevs", score: 92 }, { name: "Snacks", score: 75 }, { name: "Home", score: 40 }, { name: "Elec", score: 20 }] },
-    { city: "Chicago", products: [{ name: "Bevs", score: 55 }, { name: "Snacks", score: 50 }, { name: "Home", score: 35 }, { name: "Elec", score: 60 }] },
-    { city: "San Fran", products: [{ name: "Bevs", score: 40 }, { name: "Snacks", score: 45 }, { name: "Home", score: 25 }, { name: "Elec", score: 88 }] },
+    { city: "New York", products: [{ name: "Bevs", score: 85 }, { name: "Snacks", score: 60 }, { name: "Home", score: 30 }, { name: "Elec", score: 45 }, { name: "Toys", score: 20 }] },
+    { city: "Austin", products: [{ name: "Bevs", score: 92 }, { name: "Snacks", score: 75 }, { name: "Home", score: 40 }, { name: "Elec", score: 20 }, { name: "Toys", score: 35 }] },
+    { city: "Chicago", products: [{ name: "Bevs", score: 55 }, { name: "Snacks", score: 50 }, { name: "Home", score: 35 }, { name: "Elec", score: 60 }, { name: "Toys", score: 40 }] },
+    { city: "San Fran", products: [{ name: "Bevs", score: 40 }, { name: "Snacks", score: 45 }, { name: "Home", score: 25 }, { name: "Elec", score: 88 }, { name: "Toys", score: 65 }] },
+    { city: "Miami", products: [{ name: "Bevs", score: 95 }, { name: "Snacks", score: 80 }, { name: "Home", score: 20 }, { name: "Elec", score: 30 }, { name: "Toys", score: 25 }] },
+    { city: "Seattle", products: [{ name: "Bevs", score: 45 }, { name: "Snacks", score: 40 }, { name: "Home", score: 70 }, { name: "Elec", score: 55 }, { name: "Toys", score: 30 }] },
+    { city: "Denver", products: [{ name: "Bevs", score: 60 }, { name: "Snacks", score: 55 }, { name: "Home", score: 45 }, { name: "Elec", score: 40 }, { name: "Toys", score: 50 }] },
+    { city: "Boston", products: [{ name: "Bevs", score: 50 }, { name: "Snacks", score: 45 }, { name: "Home", score: 50 }, { name: "Elec", score: 35 }, { name: "Toys", score: 60 }] },
 ];
 
 const DRIVER_DATA = [
     { name: "Sales Velocity", value: 65, color: "bg-blue-500", icon: ShoppingCart },
     { name: "Event Overlap", value: 25, color: "bg-purple-500", icon: Calendar },
     { name: "Social Buzz", value: 10, color: "bg-pink-500", icon: Search },
+    { name: "Competitor Promo", value: 15, color: "bg-orange-500", icon: Zap },
+    { name: "Weather Impact", value: 5, color: "bg-green-500", icon: Wind },
 ];
 
 const TrendIntelligencePage = () => {
@@ -75,7 +104,7 @@ const TrendIntelligencePage = () => {
             <div className="sticky top-0 z-20 bg-[#0a0a0a]/95 backdrop-blur-md border-b border-[#222] px-6 py-4 shadow-md">
                 <div className="flex flex-wrap items-center gap-4">
                     <div className="flex flex-col space-y-1.5">
-                        <label className="text-xs font-medium text-gray-500 uppercase">City Scope</label>
+                        <label className="text-xs font-medium text-gray-400 uppercase">City Scope</label>
                         <Select value={selectedCity} onValueChange={setSelectedCity}>
                             <SelectTrigger className="w-[160px] bg-[#1a1a1a] border-[#333] text-white">
                                 <SelectValue placeholder="All Cities" />
@@ -89,7 +118,7 @@ const TrendIntelligencePage = () => {
                     </div>
 
                     <div className="flex flex-col space-y-1.5">
-                        <label className="text-xs font-medium text-gray-500 uppercase">Product Category</label>
+                        <label className="text-xs font-medium text-gray-400 uppercase">Product Category</label>
                         <Select value={selectedProduct} onValueChange={setSelectedProduct}>
                             <SelectTrigger className="w-[160px] bg-[#1a1a1a] border-[#333] text-white">
                                 <SelectValue placeholder="Select Category" />
@@ -103,7 +132,7 @@ const TrendIntelligencePage = () => {
                     </div>
 
                     <div className="flex flex-col space-y-1.5">
-                        <label className="text-xs font-medium text-gray-500 uppercase">Trend Window</label>
+                        <label className="text-xs font-medium text-gray-400 uppercase">Trend Window</label>
                         <Select value={timeWindow} onValueChange={setTimeWindow}>
                             <SelectTrigger className="w-[140px] bg-[#1a1a1a] border-[#333] text-white">
                                 <SelectValue placeholder="Last 30 Days" />
@@ -125,12 +154,12 @@ const TrendIntelligencePage = () => {
                 </div>
             </div>
 
-            <div className="p-6 max-w-7xl mx-auto space-y-8">
+            <div className="p-6 w-full space-y-8">
                 {/* KPI Cards */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                     <Card className="bg-[#111] border-[#333]">
                         <CardHeader className="pb-2">
-                            <CardTitle className="text-sm font-medium text-gray-400">Current Trend Score</CardTitle>
+                            <CardTitle className="text-sm font-medium text-gray-300">Current Trend Score</CardTitle>
                         </CardHeader>
                         <CardContent>
                             <div className="flex items-baseline space-x-2">
@@ -146,38 +175,38 @@ const TrendIntelligencePage = () => {
 
                     <Card className="bg-[#111] border-[#333]">
                         <CardHeader className="pb-2">
-                            <CardTitle className="text-sm font-medium text-gray-400">Trend Direction</CardTitle>
+                            <CardTitle className="text-sm font-medium text-gray-300">Trend Direction</CardTitle>
                         </CardHeader>
                         <CardContent>
                             <div className="flex items-center space-x-2">
                                 <TrendingUp className="w-8 h-8 text-green-500" />
                                 <span className="text-2xl font-bold text-white">Rising</span>
                             </div>
-                            <p className="mt-2 text-xs text-gray-500">+15% vs previous 30 days</p>
+                            <p className="mt-2 text-xs text-gray-400">+15% vs previous 30 days</p>
                         </CardContent>
                     </Card>
 
                     <Card className="bg-[#111] border-[#333]">
                         <CardHeader className="pb-2">
-                            <CardTitle className="text-sm font-medium text-gray-400">Signal Strength</CardTitle>
+                            <CardTitle className="text-sm font-medium text-gray-300">Signal Strength</CardTitle>
                         </CardHeader>
                         <CardContent>
                             <div className="flex items-baseline space-x-2">
                                 <span className="text-4xl font-bold text-blue-400">94%</span>
                             </div>
-                            <p className="mt-2 text-xs text-gray-500">High Trust (Consistent Data)</p>
+                            <p className="mt-2 text-xs text-gray-400">High Trust (Consistent Data)</p>
                         </CardContent>
                     </Card>
 
                     <Card className="bg-[#111] border-[#333]">
                         <CardHeader className="pb-2">
-                            <CardTitle className="text-sm font-medium text-gray-400">Forecast Impact</CardTitle>
+                            <CardTitle className="text-sm font-medium text-gray-300">Forecast Impact</CardTitle>
                         </CardHeader>
                         <CardContent>
                             <div className="flex items-baseline space-x-2">
                                 <span className="text-4xl font-bold text-purple-400">High</span>
                             </div>
-                            <p className="mt-2 text-xs text-gray-500">Model heavily weighting this trend</p>
+                            <p className="mt-2 text-xs text-gray-400">Model heavily weighting this trend</p>
                         </CardContent>
                     </Card>
                 </div>
@@ -188,7 +217,7 @@ const TrendIntelligencePage = () => {
                     <Card className="lg:col-span-2 bg-[#111] border-[#333]">
                         <CardHeader>
                             <CardTitle className="text-white">Trend Momentum Over Time</CardTitle>
-                            <CardDescription className="text-gray-500">
+                            <CardDescription className="text-gray-400">
                                 30-day velocity verification. Markers indicate external events.
                             </CardDescription>
                         </CardHeader>
@@ -215,7 +244,7 @@ const TrendIntelligencePage = () => {
                     <Card className="bg-[#111] border-[#333]">
                         <CardHeader>
                             <CardTitle className="text-white">What's Driving This?</CardTitle>
-                            <CardDescription className="text-gray-500">Factor contribution analysis.</CardDescription>
+                            <CardDescription className="text-gray-400">Factor contribution analysis.</CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-6">
                             {DRIVER_DATA.map((driver, i) => {
@@ -224,7 +253,7 @@ const TrendIntelligencePage = () => {
                                     <div key={i} className="space-y-2">
                                         <div className="flex justify-between items-center text-sm">
                                             <div className="flex items-center text-gray-300">
-                                                <Icon className="w-4 h-4 mr-2 text-gray-500" />
+                                                <Icon className="w-4 h-4 mr-2 text-gray-400" />
                                                 {driver.name}
                                             </div>
                                             <span className="font-bold text-white">{driver.value}%</span>
@@ -240,7 +269,7 @@ const TrendIntelligencePage = () => {
                             })}
                             <div className="bg-[#1a1a1a] p-4 rounded-lg border border-[#333] mt-4">
                                 <h4 className="text-sm font-semibold text-white mb-1">AI Explanation</h4>
-                                <p className="text-xs text-gray-400 leading-relaxed">
+                                <p className="text-xs text-gray-300 leading-relaxed">
                                     Recent momentum is primarily driven by pure <span className="text-blue-400">sales velocity</span> acceleration in the Northeast region. Event overlap impact is secondary but rising.
                                 </p>
                             </div>
@@ -254,16 +283,16 @@ const TrendIntelligencePage = () => {
                     <Card className="lg:col-span-2 bg-[#111] border-[#333]">
                         <CardHeader>
                             <CardTitle className="text-white">Cross-City Momentum Heatmap</CardTitle>
-                            <CardDescription className="text-gray-500">Quickly identify regional outliers.</CardDescription>
+                            <CardDescription className="text-gray-400">Quickly identify regional outliers.</CardDescription>
                         </CardHeader>
                         <CardContent>
                             <div className="overflow-x-auto">
                                 <table className="w-full text-sm text-left">
                                     <thead>
                                         <tr>
-                                            <th className="py-2 text-gray-500 font-medium">City</th>
+                                            <th className="py-2 text-gray-400 font-medium">City</th>
                                             {HEATMAP_DATA[0].products.map((p, i) => (
-                                                <th key={i} className="py-2 text-gray-500 font-medium text-center">{p.name}</th>
+                                                <th key={i} className="py-2 text-gray-400 font-medium text-center">{p.name}</th>
                                             ))}
                                         </tr>
                                     </thead>
@@ -311,15 +340,15 @@ const TrendIntelligencePage = () => {
 
                         <div className="space-y-3">
                             <h3 className="text-sm font-medium text-gray-400 uppercase tracking-wider">Recommended Actions</h3>
-                            <Button variant="outline" className="w-full justify-start border-[#333] text-gray-300 hover:bg-[#222]" onClick={() => navigate('/dashboard/analytics')}>
+                            <Button variant="outline" className="w-full justify-start border-[#333] text-gray-200 hover:bg-[#222]" onClick={() => navigate('/dashboard/analytics')}>
                                 <BarChart2 className="w-4 h-4 mr-2 text-blue-500" />
                                 View Forecast
                             </Button>
-                            <Button variant="outline" className="w-full justify-start border-[#333] text-gray-300 hover:bg-[#222]" onClick={() => navigate('/dashboard/godown')}>
+                            <Button variant="outline" className="w-full justify-start border-[#333] text-gray-200 hover:bg-[#222]" onClick={() => navigate('/dashboard/godown')}>
                                 <Package className="w-4 h-4 mr-2 text-purple-500" />
                                 Check Inventory
                             </Button>
-                            <Button variant="outline" className="w-full justify-start border-[#333] text-gray-300 hover:bg-[#222]" onClick={() => navigate('/event-intelligence')}>
+                            <Button variant="outline" className="w-full justify-start border-[#333] text-gray-200 hover:bg-[#222]" onClick={() => navigate('/event-intelligence')}>
                                 <Calendar className="w-4 h-4 mr-2 text-green-500" />
                                 See Event Context
                             </Button>

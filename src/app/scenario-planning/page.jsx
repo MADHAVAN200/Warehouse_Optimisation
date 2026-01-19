@@ -34,12 +34,22 @@ const SCENARIO_DATA = [
     { date: 'Jan 20', baseline: 150, scenario: 180 },
     { date: 'Jan 21', baseline: 145, scenario: 170 },
     { date: 'Jan 22', baseline: 135, scenario: 155 },
+    { date: 'Jan 23', baseline: 130, scenario: 145 },
+    { date: 'Jan 24', baseline: 125, scenario: 135 },
+    { date: 'Jan 25', baseline: 140, scenario: 150 },
+    { date: 'Jan 26', baseline: 145, scenario: 160 },
+    { date: 'Jan 27', baseline: 138, scenario: 145 },
+    { date: 'Jan 28', baseline: 132, scenario: 140 },
 ];
 
 const RISK_IMPACT = [
     { sku: "SKU-101 (Cola)", baseRisk: "Low", scenRisk: "High", change: "Critical" },
     { sku: "SKU-205 (Chips)", baseRisk: "Low", scenRisk: "Medium", change: "Moderate" },
     { sku: "SKU-310 (Water)", baseRisk: "Medium", scenRisk: "Medium", change: "Stable" },
+    { sku: "SKU-404 (Beer)", baseRisk: "Medium", scenRisk: "High", change: "Critical" },
+    { sku: "SKU-520 (Ice)", baseRisk: "Low", scenRisk: "High", change: "Critical" },
+    { sku: "SKU-112 (Bread)", baseRisk: "Low", scenRisk: "Low", change: "Stable" },
+    { sku: "SKU-770 (Burgers)", baseRisk: "Low", scenRisk: "Medium", change: "Moderate" },
 ];
 
 const ScenarioPlanningPage = () => {
@@ -61,7 +71,7 @@ const ScenarioPlanningPage = () => {
                     <GitBranch className="w-8 h-8 text-purple-500" />
                     <h1 className="text-3xl font-bold text-white">Scenario Planning</h1>
                 </div>
-                <p className="text-gray-400 max-w-2xl">
+                <p className="text-gray-300 max-w-2xl">
                     Simulate demand outcomes under changing conditions. Test "What-If" assumptions.
                 </p>
             </div>
@@ -71,13 +81,14 @@ const ScenarioPlanningPage = () => {
                 <aside className="w-full lg:w-80 bg-[#0f0f0f] border-r border-[#222] p-6 lg:overflow-y-auto space-y-8">
 
                     <div className="space-y-4">
+                        <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-4">Configuration</h3>
                         <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wider flex items-center">
                             <Sliders className="w-4 h-4 mr-2" />
                             Scope & Controls
                         </h3>
 
                         <div className="space-y-1.5">
-                            <label className="text-xs text-gray-500">Region / City</label>
+                            <label className="text-xs font-medium text-gray-400 mb-1 block">Region Focus</label>
                             <Select defaultValue="ny">
                                 <SelectTrigger className="bg-[#1a1a1a] border-[#333] text-white">
                                     <SelectValue placeholder="Select City" />
@@ -90,7 +101,7 @@ const ScenarioPlanningPage = () => {
                         </div>
 
                         <div className="space-y-1.5">
-                            <label className="text-xs text-gray-500">Benchmark</label>
+                            <label className="text-xs font-medium text-gray-400 mb-1 block">Benchmark</label>
                             <Select defaultValue="current">
                                 <SelectTrigger className="bg-[#1a1a1a] border-[#333] text-white">
                                     <SelectValue placeholder="Baseline Forecast" />
@@ -123,7 +134,7 @@ const ScenarioPlanningPage = () => {
                                 step={5}
                                 className="py-2"
                             />
-                            <p className="text-xs text-gray-500">Adjust expected impact of local events.</p>
+                            <p className="text-xs text-gray-400">Adjust expected impact of local events.</p>
                         </div>
 
                         <div className="space-y-3">
@@ -214,7 +225,7 @@ const ScenarioPlanningPage = () => {
                         <Card className="lg:col-span-2 bg-[#111] border-[#333]">
                             <CardHeader>
                                 <CardTitle className="text-white">Demand Comparison: Baseline vs Scenario</CardTitle>
-                                <CardDescription className="text-gray-500">
+                                <CardDescription className="text-gray-400">
                                     Projected impact of selected assumptions over the next 7 days.
                                 </CardDescription>
                             </CardHeader>
@@ -246,8 +257,10 @@ const ScenarioPlanningPage = () => {
                                     <Table>
                                         <TableHeader>
                                             <TableRow className="border-[#222] hover:bg-transparent">
-                                                <TableHead className="text-gray-400 h-8">SKU Category</TableHead>
-                                                <TableHead className="text-gray-400 h-8">Risk Change</TableHead>
+                                                <TableHead className="text-gray-300">SKU Name</TableHead>
+                                                <TableHead className="text-gray-300">Risk Type</TableHead>
+                                                <TableHead className="text-gray-300 text-right">Impact</TableHead>
+                                                <TableHead className="text-gray-300 text-right">Est. Cost</TableHead>
                                             </TableRow>
                                         </TableHeader>
                                         <TableBody>
@@ -256,8 +269,8 @@ const ScenarioPlanningPage = () => {
                                                     <TableCell className="text-sm text-gray-300 py-2">{item.sku}</TableCell>
                                                     <TableCell className="py-2">
                                                         <Badge variant="outline" className={`${item.change === 'Critical' ? 'text-red-400 border-red-900 bg-red-900/10' :
-                                                                item.change === 'Moderate' ? 'text-yellow-400 border-yellow-900 bg-yellow-900/10' :
-                                                                    'text-gray-400 border-gray-800'
+                                                            item.change === 'Moderate' ? 'text-yellow-400 border-yellow-900 bg-yellow-900/10' :
+                                                                'text-gray-400 border-gray-800'
                                                             }`}>
                                                             {item.change}
                                                         </Badge>

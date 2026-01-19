@@ -57,6 +57,72 @@ const EVENTS_DATA = [
         affectedCategories: ["Electronics", "Premium Coffee"],
         confidence: 91,
         description: "Major tech summit. Increased downtown foot traffic."
+    },
+    {
+        id: 4,
+        name: "Holiday Parade",
+        city: "New York",
+        type: "Holiday",
+        date: "2026-11-26",
+        impactScore: 4.5,
+        affectedCategories: ["Toys", "Seasonal", "Bakery"],
+        confidence: 95,
+        description: "Annual Thanksgiving parade. Massive crowd density in Midtown."
+    },
+    {
+        id: 5,
+        name: "Comic Con",
+        city: "San Diego",
+        type: "Conference",
+        date: "2026-07-23",
+        impactScore: 3.8,
+        affectedCategories: ["Snacks", "Costumes", "Electronics"],
+        confidence: 85,
+        description: "Large scale pop-culture convention. High youth demographic."
+    },
+    {
+        id: 6,
+        name: "Pride March",
+        city: "San Francisco",
+        type: "Festival",
+        date: "2026-06-28",
+        impactScore: 4.7,
+        affectedCategories: ["Beverages", "Apparel", "Party Supplies"],
+        confidence: 92,
+        description: "City-wide celebration. Expect huge demand spikes in downtown areas."
+    },
+    {
+        id: 7,
+        name: "Super Bowl Sunday",
+        city: "Los Angeles",
+        type: "Sports",
+        date: "2026-02-08",
+        impactScore: 5.0,
+        affectedCategories: ["Snacks", "Beverages", "Pizza"],
+        confidence: 99,
+        description: "National sporting event. Extreme demand for party foods."
+    },
+    {
+        id: 8,
+        name: "Summer Food Fest",
+        city: "Chicago",
+        type: "Festival",
+        date: "2026-07-10",
+        impactScore: 3.2,
+        affectedCategories: ["Fresh Ingredients", "Beverages"],
+        confidence: 78,
+        description: "Local culinary event. Moderate impact on surrounding stores."
+    },
+    {
+        id: 9,
+        name: "University Graduation",
+        city: "Boston",
+        type: "Ceremony",
+        date: "2026-05-20",
+        impactScore: 3.0,
+        affectedCategories: ["Gifts", "Floral", "Restaurants"],
+        confidence: 82,
+        description: "Multiple university commencements. High demand for gifts and dining."
     }
 ];
 
@@ -117,7 +183,7 @@ const EventIntelligencePage = () => {
                     <Calendar className="w-8 h-8 text-blue-500" />
                     <h1 className="text-3xl font-bold text-white">Event Intelligence</h1>
                 </div>
-                <p className="text-gray-400 max-w-2xl">
+                <p className="text-gray-300 max-w-2xl">
                     City-level events influencing demand signals. Analyze impact to optimize inventory and staffing.
                 </p>
             </div>
@@ -128,7 +194,7 @@ const EventIntelligencePage = () => {
 
                     {/* City Selector */}
                     <div className="flex flex-col space-y-1.5">
-                        <label className="text-xs font-medium text-gray-500 uppercase">Region / City</label>
+                        <label className="text-xs font-medium text-gray-400 uppercase">Region / City</label>
                         <Select value={selectedCity} onValueChange={setSelectedCity}>
                             <SelectTrigger className="w-[180px] bg-[#1a1a1a] border-[#333] text-white">
                                 <SelectValue placeholder="Select City" />
@@ -144,7 +210,7 @@ const EventIntelligencePage = () => {
 
                     {/* Event Type Filter */}
                     <div className="flex flex-col space-y-1.5">
-                        <label className="text-xs font-medium text-gray-500 uppercase">Event Type</label>
+                        <label className="text-xs font-medium text-gray-400 uppercase">Event Type</label>
                         <Select value={eventType} onValueChange={setEventType}>
                             <SelectTrigger className="w-[160px] bg-[#1a1a1a] border-[#333] text-white">
                                 <SelectValue placeholder="All Types" />
@@ -161,7 +227,7 @@ const EventIntelligencePage = () => {
 
                     {/* Date Range Picker */}
                     <div className="flex flex-col space-y-1.5">
-                        <label className="text-xs font-medium text-gray-500 uppercase">Time Horizon</label>
+                        <label className="text-xs font-medium text-gray-400 uppercase">Time Horizon</label>
                         <Select value={dateRange} onValueChange={setDateRange}>
                             <SelectTrigger className="w-[140px] bg-[#1a1a1a] border-[#333] text-white">
                                 <SelectValue placeholder="Next 30 Days" />
@@ -177,7 +243,7 @@ const EventIntelligencePage = () => {
 
                     {/* Impact Threshold Slider */}
                     <div className="flex flex-col space-y-1.5 w-[200px] px-2">
-                        <label className="text-xs font-medium text-gray-500 uppercase flex justify-between">
+                        <label className="text-xs font-medium text-gray-400 uppercase flex justify-between">
                             <span>Min Impact Score</span>
                             <span className="text-blue-400">{impactThreshold[0]}</span>
                         </label>
@@ -193,51 +259,51 @@ const EventIntelligencePage = () => {
                 </div>
             </div>
 
-            <div className="p-6 max-w-7xl mx-auto space-y-8">
+            <div className="p-6 w-full space-y-8">
 
                 {/* 4. EVENT IMPACT SUMMARY (KPI CARDS) */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                     <Card className="bg-[#111] border-[#333] hover:border-blue-500/30 transition-colors">
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium text-gray-400">High-Impact Events</CardTitle>
+                            <CardTitle className="text-sm font-medium text-gray-300">High-Impact Events</CardTitle>
                             <AlertTriangle className="h-4 w-4 text-red-500" />
                         </CardHeader>
                         <CardContent>
                             <div className="text-2xl font-bold text-white">3</div>
-                            <p className="text-xs text-gray-500 mt-1">Impact score ≥ {impactThreshold}</p>
+                            <p className="text-xs text-gray-400 mt-1">Impact score ≥ {impactThreshold}</p>
                         </CardContent>
                     </Card>
 
                     <Card className="bg-[#111] border-[#333] hover:border-blue-500/30 transition-colors">
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium text-gray-400">Peak Risk Window</CardTitle>
+                            <CardTitle className="text-sm font-medium text-gray-300">Peak Risk Window</CardTitle>
                             <Activity className="h-4 w-4 text-orange-500" />
                         </CardHeader>
                         <CardContent>
                             <div className="text-2xl font-bold text-white">Mar 15 - 20</div>
-                            <p className="text-xs text-gray-500 mt-1">Marathon + Festival overlap</p>
+                            <p className="text-xs text-gray-400 mt-1">Marathon + Festival overlap</p>
                         </CardContent>
                     </Card>
 
                     <Card className="bg-[#111] border-[#333] hover:border-blue-500/30 transition-colors">
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium text-gray-400">Affected Category</CardTitle>
+                            <CardTitle className="text-sm font-medium text-gray-300">Affected Category</CardTitle>
                             <ShoppingCart className="h-4 w-4 text-blue-500" />
                         </CardHeader>
                         <CardContent>
                             <div className="text-2xl font-bold text-white">Beverages</div>
-                            <p className="text-xs text-gray-500 mt-1">Sensitive to crowd events</p>
+                            <p className="text-xs text-gray-400 mt-1">Sensitive to crowd events</p>
                         </CardContent>
                     </Card>
 
                     <Card className="bg-[#111] border-[#333] hover:border-blue-500/30 transition-colors">
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium text-gray-400">Forecast Sensitivity</CardTitle>
+                            <CardTitle className="text-sm font-medium text-gray-300">Forecast Sensitivity</CardTitle>
                             <TrendingUp className="h-4 w-4 text-green-500" />
                         </CardHeader>
                         <CardContent>
                             <div className="text-2xl font-bold text-white">High</div>
-                            <p className="text-xs text-gray-500 mt-1">Historical correlation: 0.85</p>
+                            <p className="text-xs text-gray-400 mt-1">Historical correlation: 0.85</p>
                         </CardContent>
                     </Card>
                 </div>
@@ -246,18 +312,18 @@ const EventIntelligencePage = () => {
                 <Card className="bg-[#111] border-[#333]">
                     <CardHeader>
                         <CardTitle className="text-lg text-white">Upcoming Events Queue</CardTitle>
-                        <CardDescription className="text-gray-500">Operationally actionable event details for the selected region.</CardDescription>
+                        <CardDescription className="text-gray-400">Operationally actionable event details for the selected region.</CardDescription>
                     </CardHeader>
                     <CardContent>
                         <Table>
                             <TableHeader>
                                 <TableRow className="border-[#222] hover:bg-transparent">
-                                    <TableHead className="text-gray-400">Event Name</TableHead>
-                                    <TableHead className="text-gray-400">City</TableHead>
-                                    <TableHead className="text-gray-400">Type</TableHead>
-                                    <TableHead className="text-gray-400">Date</TableHead>
-                                    <TableHead className="text-gray-400 text-right">AI Impact (0-5)</TableHead>
-                                    <TableHead className="text-gray-400 text-right">Confidence</TableHead>
+                                    <TableHead className="text-gray-300">Event Name</TableHead>
+                                    <TableHead className="text-gray-300">City</TableHead>
+                                    <TableHead className="text-gray-300">Type</TableHead>
+                                    <TableHead className="text-gray-300">Date</TableHead>
+                                    <TableHead className="text-gray-300 text-right">AI Impact (0-5)</TableHead>
+                                    <TableHead className="text-gray-300 text-right">Confidence</TableHead>
                                     <TableHead className="w-[50px]"></TableHead>
                                 </TableRow>
                             </TableHeader>
@@ -269,13 +335,13 @@ const EventIntelligencePage = () => {
                                             onClick={() => toggleEventDetails(event.id)}
                                         >
                                             <TableCell className="font-medium text-white">{event.name}</TableCell>
-                                            <TableCell className="text-gray-300">{event.city}</TableCell>
+                                            <TableCell className="text-gray-200">{event.city}</TableCell>
                                             <TableCell>
                                                 <Badge variant="outline" className="border-gray-700 text-gray-300">
                                                     {event.type}
                                                 </Badge>
                                             </TableCell>
-                                            <TableCell className="text-gray-300">{event.date}</TableCell>
+                                            <TableCell className="text-gray-200">{event.date}</TableCell>
                                             <TableCell className="text-right">
                                                 <div className="flex items-center justify-end space-x-2">
                                                     <span className={`font-bold ${event.impactScore >= 4 ? 'text-red-500' :
@@ -293,10 +359,10 @@ const EventIntelligencePage = () => {
                                                     </div>
                                                 </div>
                                             </TableCell>
-                                            <TableCell className="text-right text-gray-300">{event.confidence}%</TableCell>
+                                            <TableCell className="text-right text-gray-200">{event.confidence}%</TableCell>
                                             <TableCell>
                                                 <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                                                    <MoreHorizontal className="h-4 w-4 text-gray-500" />
+                                                    <MoreHorizontal className="h-4 w-4 text-gray-400" />
                                                 </Button>
                                             </TableCell>
                                         </TableRow>
@@ -305,8 +371,8 @@ const EventIntelligencePage = () => {
                                                 <TableCell colSpan={7} className="p-0">
                                                     <div className="p-6 grid grid-cols-1 md:grid-cols-3 gap-6 animate-accordion-down">
                                                         <div className="space-y-3">
-                                                            <h4 className="text-sm font-semibold text-gray-400 uppercase tracking-wider">Context</h4>
-                                                            <p className="text-sm text-gray-300">{event.description}</p>
+                                                            <h4 className="text-sm font-semibold text-gray-300 uppercase tracking-wider">Context</h4>
+                                                            <p className="text-sm text-gray-200">{event.description}</p>
                                                             <div className="flex flex-wrap gap-2">
                                                                 {event.affectedCategories.map((cat, i) => (
                                                                     <Badge key={i} className="bg-blue-900/20 text-blue-400 border-blue-800/30">
@@ -317,25 +383,25 @@ const EventIntelligencePage = () => {
                                                         </div>
 
                                                         <div className="space-y-3">
-                                                            <h4 className="text-sm font-semibold text-gray-400 uppercase tracking-wider">Metrics</h4>
+                                                            <h4 className="text-sm font-semibold text-gray-300 uppercase tracking-wider">Metrics</h4>
                                                             <div className="grid grid-cols-2 gap-4">
                                                                 <div className="bg-[#1a1a1a] p-3 rounded-md border border-[#333]">
-                                                                    <div className="text-xs text-gray-500">Exp. Duration</div>
+                                                                    <div className="text-xs text-gray-400">Exp. Duration</div>
                                                                     <div className="text-sm font-medium text-white">3 Days</div>
                                                                 </div>
                                                                 <div className="bg-[#1a1a1a] p-3 rounded-md border border-[#333]">
-                                                                    <div className="text-xs text-gray-500">Hist. Lift</div>
+                                                                    <div className="text-xs text-gray-400">Hist. Lift</div>
                                                                     <div className="text-sm font-medium text-green-400">+12%</div>
                                                                 </div>
                                                             </div>
                                                         </div>
 
                                                         <div className="space-y-3 flex flex-col justify-between">
-                                                            <h4 className="text-sm font-semibold text-gray-400 uppercase tracking-wider">Actions</h4>
+                                                            <h4 className="text-sm font-semibold text-gray-300 uppercase tracking-wider">Actions</h4>
                                                             <div className="space-y-2">
                                                                 <Button
                                                                     variant="outline"
-                                                                    className="w-full justify-start border-[#333] hover:bg-[#222] text-gray-300"
+                                                                    className="w-full justify-start border-[#333] hover:bg-[#222] text-gray-200"
                                                                     onClick={() => navigate('/dashboard/analytics')}
                                                                 >
                                                                     <TrendingUp className="w-4 h-4 mr-2 text-blue-500" />
@@ -343,7 +409,7 @@ const EventIntelligencePage = () => {
                                                                 </Button>
                                                                 <Button
                                                                     variant="outline"
-                                                                    className="w-full justify-start border-[#333] hover:bg-[#222] text-gray-300"
+                                                                    className="w-full justify-start border-[#333] hover:bg-[#222] text-gray-200"
                                                                     onClick={() => navigate('/dashboard/godown')}
                                                                 >
                                                                     <AlertTriangle className="w-4 h-4 mr-2 text-yellow-500" />
@@ -367,7 +433,7 @@ const EventIntelligencePage = () => {
                     <Card className="lg:col-span-2 bg-[#111] border-[#333]">
                         <CardHeader>
                             <CardTitle className="text-white">Demand Impact Timeline</CardTitle>
-                            <CardDescription className="text-gray-500">Projected demand relative to baseline before, during, and after event.</CardDescription>
+                            <CardDescription className="text-gray-400">Projected demand relative to baseline before, during, and after event.</CardDescription>
                         </CardHeader>
                         <CardContent className="h-[300px]">
                             <ResponsiveContainer width="100%" height="100%">
@@ -411,7 +477,7 @@ const EventIntelligencePage = () => {
                     <Card className="bg-[#111] border-[#333]">
                         <CardHeader>
                             <CardTitle className="text-white">Category Sensitivity</CardTitle>
-                            <CardDescription className="text-gray-500">Impact by category.</CardDescription>
+                            <CardDescription className="text-gray-400">Impact by category.</CardDescription>
                         </CardHeader>
                         <CardContent className="h-[300px]">
                             <ResponsiveContainer width="100%" height="100%">
@@ -449,7 +515,7 @@ const EventIntelligencePage = () => {
                                             {insight.severity.toUpperCase()} PRIORITY
                                         </Badge>
                                     </div>
-                                    <CardDescription className="text-gray-400 mt-1">
+                                    <CardDescription className="text-gray-300 mt-1">
                                         {insight.description}
                                     </CardDescription>
                                 </CardHeader>

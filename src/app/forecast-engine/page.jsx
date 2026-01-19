@@ -25,16 +25,34 @@ import {
 
 // Mock Data
 const FORECAST_DATA = [
+    { date: 'Jan 01', history: 110, forecast: null, lower: null, upper: null, event: false },
+    { date: 'Jan 02', history: 115, forecast: null, lower: null, upper: null, event: false },
+    { date: 'Jan 03', history: 112, forecast: null, lower: null, upper: null, event: false },
+    { date: 'Jan 04', history: 118, forecast: null, lower: null, upper: null, event: false },
+    { date: 'Jan 05', history: 125, forecast: null, lower: null, upper: null, event: false },
+    { date: 'Jan 06', history: 122, forecast: null, lower: null, upper: null, event: false },
+    { date: 'Jan 07', history: 130, forecast: null, lower: null, upper: null, event: false },
+    { date: 'Jan 08', history: 128, forecast: null, lower: null, upper: null, event: false },
+    { date: 'Jan 09', history: 125, forecast: null, lower: null, upper: null, event: false },
     { date: 'Jan 10', history: 120, forecast: null, lower: null, upper: null, event: false },
     { date: 'Jan 11', history: 135, forecast: null, lower: null, upper: null, event: false },
     { date: 'Jan 12', history: 125, forecast: null, lower: null, upper: null, event: false },
     { date: 'Jan 13', history: 130, forecast: 130, lower: 125, upper: 135, event: false }, // Transition Point
-    { date: 'Jan 14', history: null, forecast: 145, lower: 130, upper: 160, event: true },
-    { date: 'Jan 15', history: null, forecast: 155, lower: 135, upper: 175, event: true },
-    { date: 'Jan 16', history: null, forecast: 150, lower: 140, upper: 160, event: false },
-    { date: 'Jan 17', history: null, forecast: 142, lower: 138, upper: 146, event: false },
-    { date: 'Jan 18', history: null, forecast: 138, lower: 130, upper: 145, event: false },
+    { date: 'Jan 14', history: null, forecast: 145, lower: 135, upper: 155, event: true },
+    { date: 'Jan 15', history: null, forecast: 155, lower: 140, upper: 170, event: true },
+    { date: 'Jan 16', history: null, forecast: 150, lower: 138, upper: 162, event: false },
+    { date: 'Jan 17', history: null, forecast: 142, lower: 135, upper: 150, event: false },
+    { date: 'Jan 18', history: null, forecast: 138, lower: 130, upper: 146, event: false },
     { date: 'Jan 19', history: null, forecast: 140, lower: 132, upper: 148, event: false },
+    { date: 'Jan 20', history: null, forecast: 138, lower: 130, upper: 146, event: false },
+    { date: 'Jan 21', history: null, forecast: 135, lower: 128, upper: 142, event: false },
+    { date: 'Jan 22', history: null, forecast: 132, lower: 125, upper: 140, event: false },
+    { date: 'Jan 23', history: null, forecast: 135, lower: 128, upper: 142, event: false },
+    { date: 'Jan 24', history: null, forecast: 140, lower: 132, upper: 148, event: false },
+    { date: 'Jan 25', history: null, forecast: 145, lower: 135, upper: 155, event: false },
+    { date: 'Jan 26', history: null, forecast: 142, lower: 134, upper: 150, event: false },
+    { date: 'Jan 27', history: null, forecast: 138, lower: 130, upper: 146, event: false },
+    { date: 'Jan 28', history: null, forecast: 135, lower: 128, upper: 142, event: false },
 ];
 
 const DRIVER_CONTRIBUTION = [
@@ -59,7 +77,7 @@ const ForecastEnginePage = () => {
                     <LineGrid className="w-8 h-8 text-blue-500" />
                     <h1 className="text-3xl font-bold text-white">Demand Forecast Engine</h1>
                 </div>
-                <p className="text-gray-400 max-w-2xl">
+                <p className="text-gray-300 max-w-2xl">
                     AI-driven demand prediction integrating history, trends, events, and weather signals.
                 </p>
             </div>
@@ -68,7 +86,7 @@ const ForecastEnginePage = () => {
             <div className="sticky top-0 z-20 bg-[#0a0a0a]/95 backdrop-blur-md border-b border-[#222] px-6 py-4 shadow-md">
                 <div className="flex flex-wrap items-center gap-4">
                     <div className="flex flex-col space-y-1.5">
-                        <label className="text-xs font-medium text-gray-500 uppercase">Store / City</label>
+                        <label className="text-xs font-medium text-gray-400 uppercase">Store / City</label>
                         <Select value={selectedCity} onValueChange={setSelectedCity}>
                             <SelectTrigger className="w-[180px] bg-[#1a1a1a] border-[#333] text-white">
                                 <SelectValue placeholder="Select City" />
@@ -81,7 +99,7 @@ const ForecastEnginePage = () => {
                     </div>
 
                     <div className="flex flex-col space-y-1.5">
-                        <label className="text-xs font-medium text-gray-500 uppercase">Category</label>
+                        <label className="text-xs font-medium text-gray-400 uppercase">Category</label>
                         <Select value={selectedCategory} onValueChange={setSelectedCategory}>
                             <SelectTrigger className="w-[180px] bg-[#1a1a1a] border-[#333] text-white">
                                 <SelectValue placeholder="Select Category" />
@@ -95,7 +113,7 @@ const ForecastEnginePage = () => {
                     </div>
 
                     <div className="flex flex-col space-y-1.5">
-                        <label className="text-xs font-medium text-gray-500 uppercase">Horizon</label>
+                        <label className="text-xs font-medium text-gray-400 uppercase">Horizon</label>
                         <Select value={horizon} onValueChange={setHorizon}>
                             <SelectTrigger className="w-[140px] bg-[#1a1a1a] border-[#333] text-white">
                                 <SelectValue placeholder="Next 7 Days" />
@@ -109,7 +127,7 @@ const ForecastEnginePage = () => {
                     </div>
 
                     <div className="flex flex-col space-y-1.5">
-                        <label className="text-xs font-medium text-gray-500 uppercase">Scenario Focus</label>
+                        <label className="text-xs font-medium text-gray-400 uppercase">Scenario Focus</label>
                         <ToggleGroup type="single" value={scenario} onValueChange={(val) => val && setScenario(val)} className="bg-[#1a1a1a] border border-[#333] rounded-md p-1">
                             <ToggleGroupItem value="base" className="data-[state=on]:bg-gray-700 data-[state=on]:text-white text-gray-400 hover:text-white h-8 text-xs">Base</ToggleGroupItem>
                             <ToggleGroupItem value="event" className="data-[state=on]:bg-purple-900/50 data-[state=on]:text-purple-300 text-gray-400 hover:text-white h-8 text-xs">Event</ToggleGroupItem>
@@ -120,59 +138,59 @@ const ForecastEnginePage = () => {
                 </div>
             </div>
 
-            <div className="p-6 max-w-7xl mx-auto space-y-8">
+            <div className="p-6 w-full space-y-8">
                 {/* KPI Cards */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                     <Card className="bg-[#111] border-[#333]">
                         <CardHeader className="pb-2">
-                            <CardTitle className="text-sm font-medium text-gray-400">Predicted Demand</CardTitle>
+                            <CardTitle className="text-sm font-medium text-gray-300">Predicted Demand</CardTitle>
                         </CardHeader>
                         <CardContent>
                             <div className="flex items-center space-x-2">
                                 <Package className="w-8 h-8 text-blue-500" />
                                 <span className="text-3xl font-bold text-white">1,240</span>
-                                <span className="text-sm text-gray-500">units</span>
+                                <span className="text-sm text-gray-400">units</span>
                             </div>
-                            <p className="mt-2 text-xs text-gray-500">Next 7 Days Total</p>
+                            <p className="mt-2 text-xs text-gray-400">Next 7 Days Total</p>
                         </CardContent>
                     </Card>
 
                     <Card className="bg-[#111] border-[#333]">
                         <CardHeader className="pb-2">
-                            <CardTitle className="text-sm font-medium text-gray-400">Change vs Baseline</CardTitle>
+                            <CardTitle className="text-sm font-medium text-gray-300">Change vs Baseline</CardTitle>
                         </CardHeader>
                         <CardContent>
                             <div className="flex items-center space-x-2">
                                 <TrendingUp className="w-8 h-8 text-green-500" />
                                 <span className="text-3xl font-bold text-white">+18%</span>
                             </div>
-                            <p className="mt-2 text-xs text-gray-500">Event-driven uplift</p>
+                            <p className="mt-2 text-xs text-gray-400">Event-driven uplift</p>
                         </CardContent>
                     </Card>
 
                     <Card className="bg-[#111] border-[#333]">
                         <CardHeader className="pb-2">
-                            <CardTitle className="text-sm font-medium text-gray-400">Confidence Score</CardTitle>
+                            <CardTitle className="text-sm font-medium text-gray-300">Confidence Score</CardTitle>
                         </CardHeader>
                         <CardContent>
                             <div className="flex items-center space-x-2">
                                 <Activity className="w-8 h-8 text-yellow-500" />
                                 <span className="text-3xl font-bold text-white">High</span>
                             </div>
-                            <p className="mt-2 text-xs text-gray-500">88% Statistical Confidence</p>
+                            <p className="mt-2 text-xs text-gray-400">88% Statistical Confidence</p>
                         </CardContent>
                     </Card>
 
                     <Card className="bg-[#111] border-[#333]">
                         <CardHeader className="pb-2">
-                            <CardTitle className="text-sm font-medium text-gray-400">Volatility Index</CardTitle>
+                            <CardTitle className="text-sm font-medium text-gray-300">Volatility Index</CardTitle>
                         </CardHeader>
                         <CardContent>
                             <div className="flex items-center space-x-2">
                                 <Zap className="w-8 h-8 text-orange-500" />
                                 <span className="text-3xl font-bold text-white">Med</span>
                             </div>
-                            <p className="mt-2 text-xs text-gray-500">Moderate fluctuations expected</p>
+                            <p className="mt-2 text-xs text-gray-400">Moderate fluctuations expected</p>
                         </CardContent>
                     </Card>
                 </div>
@@ -183,13 +201,13 @@ const ForecastEnginePage = () => {
                         <div className="flex items-center justify-between">
                             <div>
                                 <CardTitle className="text-white">Demand Forecast Over Time</CardTitle>
-                                <CardDescription className="text-gray-500">
+                                <CardDescription className="text-gray-400">
                                     Comparing historical actuals with AI-generated future demand. Shaded area represents confidence interval.
                                 </CardDescription>
                             </div>
                             {/* Event markers legend could go here */}
                             <div className="flex items-center space-x-4">
-                                <div className="flex items-center text-xs text-gray-400">
+                                <div className="flex items-center text-xs text-gray-300">
                                     <div className="w-3 h-3 bg-purple-500 rounded-full mr-2 opacity-20 border border-purple-500"></div> Event Active
                                 </div>
                             </div>
@@ -246,7 +264,7 @@ const ForecastEnginePage = () => {
                     <Card className="bg-[#111] border-[#333]">
                         <CardHeader>
                             <CardTitle className="text-white">What's Driving This Forecast?</CardTitle>
-                            <CardDescription className="text-gray-500">Contribution of each intelligence signal to the predicted uplift.</CardDescription>
+                            <CardDescription className="text-gray-400">Contribution of each intelligence signal to the predicted uplift.</CardDescription>
                         </CardHeader>
                         <CardContent>
                             <div className="h-[200px] flex items-center justify-center">
@@ -268,7 +286,7 @@ const ForecastEnginePage = () => {
                             </div>
                             <div className="bg-[#1a1a1a] p-4 rounded-lg border border-[#333] mt-4">
                                 <h4 className="text-sm font-semibold text-white mb-1">AI Insight</h4>
-                                <p className="text-xs text-gray-400 leading-relaxed">
+                                <p className="text-xs text-gray-300 leading-relaxed">
                                     Upcoming <span className="text-purple-400">city festival</span> contributes 25% of expected demand uplift, strongly supported by rising <span className="text-blue-400">Trend Intelligence</span>. Weather impact is minimal.
                                 </p>
                             </div>
@@ -279,16 +297,16 @@ const ForecastEnginePage = () => {
                     <Card className="bg-[#111] border-[#333]">
                         <CardHeader>
                             <CardTitle className="text-white">Forecast Data Table</CardTitle>
-                            <CardDescription className="text-gray-500">Validation View</CardDescription>
+                            <CardDescription className="text-gray-400">Validation View</CardDescription>
                         </CardHeader>
                         <CardContent>
                             <Table>
                                 <TableHeader>
                                     <TableRow className="border-[#222] hover:bg-transparent">
-                                        <TableHead className="text-gray-400">Date</TableHead>
-                                        <TableHead className="text-gray-400 text-right">Forecast</TableHead>
-                                        <TableHead className="text-gray-400 text-right">Confidence Range</TableHead>
-                                        <TableHead className="text-gray-400 text-right">Confidence</TableHead>
+                                        <TableHead className="text-gray-300">Date</TableHead>
+                                        <TableHead className="text-gray-300 text-right">Forecast</TableHead>
+                                        <TableHead className="text-gray-300 text-right">Confidence Range</TableHead>
+                                        <TableHead className="text-gray-300 text-right">Confidence</TableHead>
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
@@ -296,7 +314,7 @@ const ForecastEnginePage = () => {
                                         <TableRow key={i} className="border-[#222] hover:bg-[#1a1a1a]">
                                             <TableCell className="font-medium text-white">{row.date}</TableCell>
                                             <TableCell className="text-right text-blue-400 font-bold">{row.forecast}</TableCell>
-                                            <TableCell className="text-right text-gray-500 text-xs">{row.lower} - {row.upper}</TableCell>
+                                            <TableCell className="text-right text-gray-400 text-xs">{row.lower} - {row.upper}</TableCell>
                                             <TableCell className="text-right">
                                                 <Badge variant="outline" className="text-green-400 border-green-900 bg-green-900/10">High</Badge>
                                             </TableCell>
@@ -314,7 +332,7 @@ const ForecastEnginePage = () => {
                         <CardHeader className="flex flex-row items-center justify-between pb-2">
                             <div>
                                 <CardTitle className="text-lg text-white font-semibold">Forecast Risk Assessment</CardTitle>
-                                <CardDescription className="text-gray-400 mt-1">
+                                <CardDescription className="text-gray-300 mt-1">
                                     Uncertainty increases linearly after Jan 16 due to potential weather shift.
                                 </CardDescription>
                             </div>

@@ -3,14 +3,16 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
     Calendar, MapPin, Activity, TrendingUp, Cloud, Thermometer,
-    LineChart, Brain, AlertTriangle, Package, Store, Eye,
     Camera, Scan, Shield, Server, Bell, Lightbulb, User, Settings,
-    LogOut, Menu
+    LogOut, Menu, Zap, LineChart, Brain, AlertTriangle, Package, Store, Eye,
+    ArrowRightLeft
 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
+import AlertSidebar, { AlertContent } from '@/components/alert-sidebar';
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 
 const ControlTowerPage = () => {
     const navigate = useNavigate();
@@ -106,7 +108,7 @@ const ControlTowerPage = () => {
                     description: "Monitor self-checkout lanes and anomalies",
                     metrics: ["Active lanes: 8", "Alerts: 0"],
                     action: "Checkout Monitoring Page",
-                    path: "/checkout-monitor"
+                    path: "/live-checkout"
                 },
                 {
                     title: "Vision-Based Verification",
@@ -143,10 +145,9 @@ const ControlTowerPage = () => {
                     title: "Model Health & Drift",
                     icon: Shield,
                     description: "Detect accuracy degradation and bias",
-                    metrics: ["Coming Soon"],
-                    action: "Phase 2",
-                    path: null,
-                    badge: "Phase 2"
+                    metrics: ["Health Score: 88/100"],
+                    action: "Model Health Page",
+                    path: "/model-health"
                 }
             ]
         },
@@ -188,14 +189,21 @@ const ControlTowerPage = () => {
                 </div>
 
                 <nav className="flex-1 py-4 space-y-2 px-2">
+                    <Button variant="ghost" className="w-full justify-start text-gray-400 hover:text-white hover:bg-[#222]" onClick={() => navigate('/dashboard')}>
+                        <Store className="w-5 h-5 mr-3" />
+                        <span className="hidden md:block">Dashboard</span>
+                    </Button>
                     <Button variant="ghost" className="w-full justify-start text-gray-400 hover:text-white hover:bg-[#222]">
                         <Activity className="w-5 h-5 mr-3" />
                         <span className="hidden md:block">Control Tower</span>
                     </Button>
-                    <Separator className="bg-[#222] my-2" />
-                    <Button variant="ghost" className="w-full justify-start text-gray-400 hover:text-white hover:bg-[#222]" onClick={() => navigate('/dashboard')}>
-                        <Store className="w-5 h-5 mr-3" />
-                        <span className="hidden md:block">Dashboard</span>
+                    <Button variant="ghost" className="w-full justify-start text-red-500 hover:text-red-400 hover:bg-[#222]" onClick={() => navigate('/alerts')}>
+                        <Zap className="w-5 h-5 mr-3" />
+                        <span className="hidden md:block">Operational Alerts</span>
+                    </Button>
+                    <Button variant="ghost" className="w-full justify-start text-blue-400 hover:text-blue-300 hover:bg-[#222]" onClick={() => navigate('/stock-rebalancing')}>
+                        <ArrowRightLeft className="w-5 h-5 mr-3" />
+                        <span className="hidden md:block">Stock Rebalancing</span>
                     </Button>
                     <Button variant="ghost" className="w-full justify-start text-gray-400 hover:text-white hover:bg-[#222]" onClick={() => navigate('/vendor')}>
                         <Package className="w-5 h-5 mr-3" />
@@ -244,76 +252,93 @@ const ControlTowerPage = () => {
                             <h2 className="text-sm text-gray-400 font-medium">System Health</h2>
                             <p className="text-green-500 text-sm font-semibold">All Systems Nominal</p>
                         </div>
+
+                        <Sheet>
+                            <SheetTrigger asChild>
+                                <Button variant="ghost" size="icon" className="text-gray-400 hover:text-white relative">
+                                    <Bell className="w-5 h-5" />
+                                    <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full animate-pulse border border-[#111]"></span>
+                                </Button>
+                            </SheetTrigger>
+                            <SheetContent className="bg-[#0f0f0f] border-l border-[#222] text-white p-0 w-80 sm:max-w-sm">
+                                <AlertContent />
+                            </SheetContent>
+                        </Sheet>
+
                         <div className="w-8 h-8 bg-[#222] rounded-full flex items-center justify-center border border-[#333]">
                             <User className="w-4 h-4 text-gray-400" />
                         </div>
                     </div>
                 </header>
 
-                {/* Content Canvas */}
-                <main className="flex-1 p-6 space-y-8 overflow-y-auto bg-[#0a0a0a]">
-                    <div className="mb-6">
-                        <h1 className="text-2xl font-bold text-white mb-2">Control Tower</h1>
-                        <p className="text-gray-400">Operational cockpit for warehouse and retail intelligence.</p>
-                    </div>
+                <div className="flex flex-1 overflow-hidden">
+                    {/* Content Canvas */}
+                    <main className="flex-1 p-6 space-y-8 overflow-y-auto bg-[#0a0a0a]">
+                        <div className="mb-6">
+                            <h1 className="text-2xl font-bold text-white mb-2">Control Tower</h1>
+                            <p className="text-gray-400">Operational cockpit for warehouse and retail intelligence.</p>
+                        </div>
 
-                    {partitions.map((partition) => (
-                        <div key={partition.id} className="space-y-4">
-                            <div className="flex items-end justify-between border-b border-[#222] pb-2">
-                                <div>
-                                    <h2 className="text-xl font-semibold text-blue-400">{partition.title}</h2>
-                                    <p className="text-sm text-gray-500 mt-1">{partition.description}</p>
+                        {partitions.filter(p => p.id !== 'alerts').map((partition) => (
+                            <div key={partition.id} className="space-y-4">
+                                <div className="flex items-end justify-between border-b border-[#222] pb-2">
+                                    <div>
+                                        <h2 className="text-xl font-semibold text-blue-400">{partition.title}</h2>
+                                        <p className="text-sm text-gray-500 mt-1">{partition.description}</p>
+                                    </div>
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                    {partition.cards.map((card, idx) => {
+                                        const Icon = card.icon;
+                                        return (
+                                            <Card key={idx} onClick={() => card.path && navigate(card.path)} className="bg-[#111] border-[#333] hover:border-blue-500/50 transition-all cursor-pointer group rounded-xl overflow-hidden">
+                                                <CardHeader className="pb-3">
+                                                    <div className="flex items-start justify-between">
+                                                        <div className={`p-2 rounded-lg bg-[#1a1a1a] group-hover:bg-blue-900/20 transition-colors`}>
+                                                            <Icon className="w-6 h-6 text-blue-500" />
+                                                        </div>
+                                                        {card.badge && (
+                                                            <Badge variant="secondary" className="bg-yellow-900/30 text-yellow-400 border-yellow-800/50">
+                                                                {card.badge}
+                                                            </Badge>
+                                                        )}
+                                                        {card.alertCount && (
+                                                            <Badge variant="destructive" className="bg-red-900/30 text-red-400 border-red-800/50">
+                                                                {card.alertCount} Active
+                                                            </Badge>
+                                                        )}
+                                                    </div>
+                                                    <CardTitle className="text-lg font-medium text-gray-200 mt-4 group-hover:text-blue-400 transition-colors">
+                                                        {card.title}
+                                                    </CardTitle>
+                                                    <CardDescription className="text-gray-500 line-clamp-2">
+                                                        {card.description}
+                                                    </CardDescription>
+                                                </CardHeader>
+                                                <CardContent>
+                                                    <div className="space-y-3">
+                                                        {card.metrics.map((metric, i) => (
+                                                            <div key={i} className="flex items-center text-sm text-gray-400">
+                                                                <div className="w-1.5 h-1.5 rounded-full bg-blue-500 mr-2" />
+                                                                {metric}
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                    <div className="mt-4 pt-4 border-t border-[#222] flex items-center text-xs font-medium text-gray-500 uppercase tracking-wider group-hover:text-blue-400 transition-colors">
+                                                        Open Module <TrendingUp className="w-3 h-3 ml-1" />
+                                                    </div>
+                                                </CardContent>
+                                            </Card>
+                                        );
+                                    })}
                                 </div>
                             </div>
+                        ))}
+                    </main>
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                {partition.cards.map((card, idx) => {
-                                    const Icon = card.icon;
-                                    return (
-                                        <Card key={idx} onClick={() => card.path && navigate(card.path)} className="bg-[#111] border-[#333] hover:border-blue-500/50 transition-all cursor-pointer group rounded-xl overflow-hidden">
-                                            <CardHeader className="pb-3">
-                                                <div className="flex items-start justify-between">
-                                                    <div className={`p-2 rounded-lg bg-[#1a1a1a] group-hover:bg-blue-900/20 transition-colors`}>
-                                                        <Icon className="w-6 h-6 text-blue-500" />
-                                                    </div>
-                                                    {card.badge && (
-                                                        <Badge variant="secondary" className="bg-yellow-900/30 text-yellow-400 border-yellow-800/50">
-                                                            {card.badge}
-                                                        </Badge>
-                                                    )}
-                                                    {card.alertCount && (
-                                                        <Badge variant="destructive" className="bg-red-900/30 text-red-400 border-red-800/50">
-                                                            {card.alertCount} Active
-                                                        </Badge>
-                                                    )}
-                                                </div>
-                                                <CardTitle className="text-lg font-medium text-gray-200 mt-4 group-hover:text-blue-400 transition-colors">
-                                                    {card.title}
-                                                </CardTitle>
-                                                <CardDescription className="text-gray-500 line-clamp-2">
-                                                    {card.description}
-                                                </CardDescription>
-                                            </CardHeader>
-                                            <CardContent>
-                                                <div className="space-y-3">
-                                                    {card.metrics.map((metric, i) => (
-                                                        <div key={i} className="flex items-center text-sm text-gray-400">
-                                                            <div className="w-1.5 h-1.5 rounded-full bg-blue-500 mr-2" />
-                                                            {metric}
-                                                        </div>
-                                                    ))}
-                                                </div>
-                                                <div className="mt-4 pt-4 border-t border-[#222] flex items-center text-xs font-medium text-gray-500 uppercase tracking-wider group-hover:text-blue-400 transition-colors">
-                                                    Open Module <TrendingUp className="w-3 h-3 ml-1" />
-                                                </div>
-                                            </CardContent>
-                                        </Card>
-                                    );
-                                })}
-                            </div>
-                        </div>
-                    ))}
-                </main>
+                    {/* Operational Alerts Sidebar - REMOVED as per user request */}
+                </div>
             </div>
         </div>
     );

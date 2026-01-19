@@ -27,13 +27,7 @@ export default function LoginPage() {
       image: "/staff.png",
       route: "/dashboard",
     },
-    {
-      id: "flash-sales",
-      title: "Flash Sales",
-      description: "Discover exclusive deals on quality products and help reduce waste.",
-      image: "/dev.png",
-      route: "/customer",
-    },
+
   ];
   const handleRoleSelect = (role) => {
     if (selectedRole)

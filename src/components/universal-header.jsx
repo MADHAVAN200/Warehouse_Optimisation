@@ -8,7 +8,23 @@ export function UniversalHeader() {
   const navigate = useNavigate();
   // Don't show header on login page
   // Don't show header on login page or control tower (as it has its own shell)
-  if (pathname === "/" || pathname === "/login")
+  // Also hiding for intelligence modules for full-screen immersion
+  if (pathname === "/" || pathname === "/login" ||
+    pathname === "/event-intelligence" ||
+    pathname === "/trend-intelligence" ||
+    pathname === "/weather-intelligence" ||
+    pathname === "/forecast-engine" ||
+    pathname === "/scenario-planning" ||
+    pathname === "/inventory-risk" ||
+    pathname === "/store-health" ||
+    pathname === "/live-checkout" ||
+    pathname === "/checkout-vision" ||
+    pathname === "/checkout-analytics" ||
+    pathname === "/federated-learning" ||
+    pathname === "/model-health" ||
+    pathname === "/alerts" ||
+    pathname === "/stock-rebalancing" ||
+    pathname === "/vendor")
     return null;
   const handleSignOut = () => {
     navigate("/");
