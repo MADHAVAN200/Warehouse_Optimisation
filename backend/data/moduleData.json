@@ -5,6 +5,22 @@
     },
     "alerts": [
       {
+        "id": "ALT-1773997286889",
+        "priority": "Critical",
+        "type": "Checkout",
+        "source": "Manual Entry",
+        "description": "Fire",
+        "store": "Store 408",
+        "time": "Just now",
+        "sla": "30m remaining",
+        "status": "New",
+        "owner": "Unassigned",
+        "rootCause": [
+          "Delay"
+        ],
+        "recommendation": "Review and triage."
+      },
+      {
         "id": "ALT-2024-001",
         "priority": "Critical",
         "type": "Inventory",
@@ -106,6 +122,50 @@
       }
     ],
     "transfers": [
+      {
+        "id": "TRF-1773997232753",
+        "sku": "SKU-2028",
+        "product": "Raw Milk",
+        "qty": 90,
+        "unit": "units",
+        "source": "DC-North (Warehouse)",
+        "destination": "Store #108 (Downtown)",
+        "type": "Inter-store",
+        "status": "Dispatched",
+        "eta": "Tomorrow, 10:00",
+        "sla_status": "On Track",
+        "cold_chain": false,
+        "risk_level": "Medium",
+        "events": [
+          {
+            "time": "Now",
+            "event": "Transfer created",
+            "location": "DC-North (Warehouse)"
+          }
+        ]
+      },
+      {
+        "id": "TRF-1773997161852",
+        "sku": "SKU-8881",
+        "product": "Organic Melons",
+        "qty": 100,
+        "unit": "units",
+        "source": "DC-North (Warehouse)",
+        "destination": "Store #108 (Downtown)",
+        "type": "Warehouse -> Store",
+        "status": "In Transit",
+        "eta": "Tomorrow, 10:00",
+        "sla_status": "On Track",
+        "cold_chain": false,
+        "risk_level": "Medium",
+        "events": [
+          {
+            "time": "Now",
+            "event": "Transfer created",
+            "location": "DC-North (Warehouse)"
+          }
+        ]
+      },
       {
         "id": "TRF-1773986320999",
         "sku": "SKU-4841",

@@ -19,8 +19,10 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetFooter } from "@/components/ui/sheet";
+import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Separator } from '@/components/ui/separator';
+import { toast } from '@/hooks/use-toast';
 
 import { backendModuleService } from '@/services/backendModuleService';
 
@@ -89,6 +91,17 @@ const OperationalAlertsPage = () => {
     const [filterPriority, setFilterPriority] = useState("all");
     const [alerts, setAlerts] = useState(FALLBACK_ALERTS_DATA);
     const [avgResponseTime, setAvgResponseTime] = useState('8m');
+    const [createSheetOpen, setCreateSheetOpen] = useState(false);
+    const [isSavingAlert, setIsSavingAlert] = useState(false);
+    const [createError, setCreateError] = useState('');
+    const [newAlert, setNewAlert] = useState({
+        description: '',
+        priority: 'High',
+        type: 'Inventory',
+        store: 'Store 402',
+        rootCauseText: '',
+        recommendation: 'Review and triage.',
+    });
 
     React.useEffect(() => {
         const loadAlerts = async () => {
@@ -116,36 +129,72 @@ const OperationalAlertsPage = () => {
         return { critical, high, overdue };
     }, [alerts]);
 
+    const resetCreateForm = () => {
+        setNewAlert({
+            description: '',
+            priority: 'High',
+            type: 'Inventory',
+            store: 'Store 402',
+            rootCauseText: '',
+            recommendation: 'Review and triage.',
+        });
+        setCreateError('');
+    };
+
+    const handleAlertFieldChange = (field, value) => {
+        setNewAlert((prev) => ({ ...prev, [field]: value }));
+    };
+
     const handleAddAlert = async () => {
-        const description = window.prompt('Alert description');
-        if (!description) return;
+        if (!newAlert.description.trim()) {
+            setCreateError('Description is required.');
+            return;
+        }
 
-        const priority = window.prompt('Priority (Critical/High/Medium)', 'High') || 'High';
-        const type = window.prompt('Type (Inventory/Forecast/Checkout/Model/System)', 'Inventory') || 'Inventory';
-        const store = window.prompt('Store label', 'Store 402') || 'Store 402';
+        setIsSavingAlert(true);
+        setCreateError('');
 
-        const newAlert = {
+        const alertPayload = {
             id: `ALT-${Date.now()}`,
-            priority,
-            type,
+            priority: newAlert.priority,
+            type: newAlert.type,
             source: 'Manual Entry',
-            description,
-            store,
+            description: newAlert.description.trim(),
+            store: newAlert.store.trim() || 'Store 402',
             time: 'Just now',
             sla: '30m remaining',
             status: 'New',
             owner: 'Unassigned',
-            rootCause: ['Manual note'],
-            recommendation: 'Review and triage.'
+            rootCause: newAlert.rootCauseText
+                .split(',')
+                .map((item) => item.trim())
+                .filter(Boolean),
+            recommendation: newAlert.recommendation.trim() || 'Review and triage.'
         };
 
         try {
-            await backendModuleService.addModuleItem('alerts', 'alerts', newAlert);
-            setAlerts((prev) => [newAlert, ...prev]);
-            window.alert('Alert added successfully.');
+            if (alertPayload.rootCause.length === 0) {
+                alertPayload.rootCause = ['Manual note'];
+            }
+
+            await backendModuleService.addModuleItem('alerts', 'alerts', alertPayload);
+            setAlerts((prev) => [alertPayload, ...prev]);
+            setCreateSheetOpen(false);
+            resetCreateForm();
+            toast({
+                title: 'Alert saved',
+                description: 'The alert has been added successfully.',
+            });
         } catch (err) {
             console.error('Failed to add alert:', err);
-            window.alert(`Could not save alert. Ensure backend is running on port 3001.\n\n${err.message || err}`);
+            setCreateError(err.message || 'Could not save alert.');
+            toast({
+                title: 'Save failed',
+                description: err.message || 'Could not save alert.',
+                variant: 'destructive',
+            });
+        } finally {
+            setIsSavingAlert(false);
         }
     };
 
@@ -179,7 +228,13 @@ const OperationalAlertsPage = () => {
                             <Button className="h-9 bg-blue-600 hover:bg-blue-700 text-white">
                                 <CheckCircle2 className="w-4 h-4 mr-2" /> Acknowledge All
                             </Button>
-                            <Button className="h-9 bg-purple-600 hover:bg-purple-700 text-white" onClick={handleAddAlert}>
+                            <Button
+                                className="h-9 bg-purple-600 hover:bg-purple-700 text-white"
+                                onClick={() => {
+                                    resetCreateForm();
+                                    setCreateSheetOpen(true);
+                                }}
+                            >
                                 <AlertTriangle className="w-4 h-4 mr-2" /> Add Alert
                             </Button>
                         </div>
@@ -439,6 +494,118 @@ const OperationalAlertsPage = () => {
 
                         </div>
                     )}
+                </SheetContent>
+            </Sheet>
+
+            <Sheet open={createSheetOpen} onOpenChange={setCreateSheetOpen}>
+                <SheetContent className="bg-[#111] border-l border-[#222] text-white w-[520px] sm:max-w-[560px] overflow-y-auto">
+                    <div className="space-y-6 pt-4">
+                        <SheetHeader className="text-left">
+                            <SheetTitle className="text-white text-xl">Create Alert</SheetTitle>
+                            <SheetDescription className="text-gray-400">
+                                Add a new operational alert and save it to the shared backend/Supabase flow.
+                            </SheetDescription>
+                        </SheetHeader>
+
+                        <div className="space-y-5">
+                            <div className="space-y-2">
+                                <label className="text-xs font-semibold uppercase tracking-wider text-gray-400">Description</label>
+                                <Textarea
+                                    value={newAlert.description}
+                                    onChange={(e) => handleAlertFieldChange('description', e.target.value)}
+                                    placeholder="Describe the issue, impact, and urgency..."
+                                    className="min-h-[110px] bg-[#1a1a1a] border-[#333] text-white"
+                                />
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="space-y-2">
+                                    <label className="text-xs font-semibold uppercase tracking-wider text-gray-400">Priority</label>
+                                    <Select value={newAlert.priority} onValueChange={(value) => handleAlertFieldChange('priority', value)}>
+                                        <SelectTrigger className="bg-[#1a1a1a] border-[#333] text-white">
+                                            <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="Critical">Critical</SelectItem>
+                                            <SelectItem value="High">High</SelectItem>
+                                            <SelectItem value="Medium">Medium</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+
+                                <div className="space-y-2">
+                                    <label className="text-xs font-semibold uppercase tracking-wider text-gray-400">Type</label>
+                                    <Select value={newAlert.type} onValueChange={(value) => handleAlertFieldChange('type', value)}>
+                                        <SelectTrigger className="bg-[#1a1a1a] border-[#333] text-white">
+                                            <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="Inventory">Inventory</SelectItem>
+                                            <SelectItem value="Forecast">Forecast</SelectItem>
+                                            <SelectItem value="Checkout">Checkout</SelectItem>
+                                            <SelectItem value="Model/System">Model/System</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                            </div>
+
+                            <div className="space-y-2">
+                                <label className="text-xs font-semibold uppercase tracking-wider text-gray-400">Store</label>
+                                <Input
+                                    value={newAlert.store}
+                                    onChange={(e) => handleAlertFieldChange('store', e.target.value)}
+                                    placeholder="Store 402"
+                                    className="bg-[#1a1a1a] border-[#333] text-white"
+                                />
+                            </div>
+
+                            <div className="space-y-2">
+                                <label className="text-xs font-semibold uppercase tracking-wider text-gray-400">Root Causes</label>
+                                <Input
+                                    value={newAlert.rootCauseText}
+                                    onChange={(e) => handleAlertFieldChange('rootCauseText', e.target.value)}
+                                    placeholder="Comma separated, e.g. Delay, demand spike"
+                                    className="bg-[#1a1a1a] border-[#333] text-white"
+                                />
+                            </div>
+
+                            <div className="space-y-2">
+                                <label className="text-xs font-semibold uppercase tracking-wider text-gray-400">Recommendation</label>
+                                <Textarea
+                                    value={newAlert.recommendation}
+                                    onChange={(e) => handleAlertFieldChange('recommendation', e.target.value)}
+                                    placeholder="What should operations do next?"
+                                    className="min-h-[96px] bg-[#1a1a1a] border-[#333] text-white"
+                                />
+                            </div>
+
+                            {createError && (
+                                <div className="rounded-lg border border-red-900/60 bg-red-950/30 px-3 py-2 text-sm text-red-300">
+                                    {createError}
+                                </div>
+                            )}
+                        </div>
+
+                        <SheetFooter className="gap-2 sm:justify-end">
+                            <Button
+                                variant="outline"
+                                className="border-[#333] text-gray-300 bg-transparent"
+                                onClick={() => {
+                                    setCreateSheetOpen(false);
+                                    resetCreateForm();
+                                }}
+                            >
+                                Cancel
+                            </Button>
+                            <Button
+                                className="bg-purple-600 hover:bg-purple-700 text-white"
+                                onClick={handleAddAlert}
+                                disabled={isSavingAlert}
+                            >
+                                {isSavingAlert ? 'Saving...' : 'Save Alert'}
+                            </Button>
+                        </SheetFooter>
+                    </div>
                 </SheetContent>
             </Sheet>
 

@@ -15,12 +15,18 @@ import {
 } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import {
     Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
 import { Separator } from '@/components/ui/separator';
 import { Progress } from "@/components/ui/progress";
+import {
+    Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from "@/components/ui/select";
+import { Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { backendModuleService } from '@/services/backendModuleService';
+import { toast } from '@/hooks/use-toast';
 
 // --- MOCK DATA ---
 
@@ -54,9 +60,20 @@ const FALLBACK_LOGS = [
 const FederatedLearningPage = () => {
     const navigate = useNavigate();
     const [isAggregating, setIsAggregating] = useState(false);
+    const [createSheetOpen, setCreateSheetOpen] = useState(false);
+    const [isSavingNode, setIsSavingNode] = useState(false);
+    const [createError, setCreateError] = useState('');
     const [globalAccuracyData, setGlobalAccuracyData] = useState(FALLBACK_GLOBAL_ACCURACY_DATA);
     const [edgeNodes, setEdgeNodes] = useState(FALLBACK_EDGE_NODES);
     const [logs, setLogs] = useState(FALLBACK_LOGS);
+    const [newNode, setNewNode] = useState({
+        id: '',
+        status: 'Ready',
+        round: '108',
+        accuracy: '90',
+        weight: '1.0',
+        drift: 'Low',
+    });
 
     const loadFederatedData = async () => {
         try {
@@ -86,35 +103,76 @@ const FederatedLearningPage = () => {
                 },
                 ...prev
             ]));
+            toast({
+                title: 'Aggregation started',
+                description: 'The federated aggregation job was triggered successfully.',
+            });
         } catch (err) {
             console.error('Federated aggregation trigger failed:', err);
-            window.alert(`Aggregation failed. Ensure backend is running on port 3001.\n\n${err.message || err}`);
+            toast({
+                title: 'Aggregation failed',
+                description: err.message || 'Could not trigger federated aggregation.',
+                variant: 'destructive',
+            });
         } finally {
             setIsAggregating(false);
         }
     };
 
+    const resetNodeForm = () => {
+        setNewNode({
+            id: '',
+            status: 'Ready',
+            round: '108',
+            accuracy: '90',
+            weight: '1.0',
+            drift: 'Low',
+        });
+        setCreateError('');
+    };
+
+    const handleNodeFieldChange = (field, value) => {
+        setNewNode((prev) => ({ ...prev, [field]: value }));
+    };
+
     const handleAddNode = async () => {
-        const nodeId = window.prompt('Node ID (e.g., STORE-999)');
-        if (!nodeId) return;
+        if (!newNode.id.trim()) {
+            setCreateError('Node ID is required.');
+            return;
+        }
+
+        setIsSavingNode(true);
+        setCreateError('');
 
         const node = {
-            id: nodeId,
-            status: 'Ready',
-            round: 108,
-            accuracy: 90.0,
-            weight: 1.0,
-            drift: 'Low',
+            id: newNode.id.trim(),
+            status: newNode.status,
+            round: Number(newNode.round) || 108,
+            accuracy: Number(newNode.accuracy) || 90,
+            weight: Number(newNode.weight) || 1.0,
+            drift: newNode.drift,
             lastUpdate: 'Just now'
         };
 
         try {
             await backendModuleService.addModuleItem('federatedLearning', 'edgeNodes', node);
             setEdgeNodes((prev) => [node, ...prev]);
-            window.alert('Edge node added successfully.');
+            setCreateSheetOpen(false);
+            resetNodeForm();
+            toast({
+                title: 'Node saved',
+                description: 'The edge node was added successfully.',
+            });
         } catch (err) {
             console.error('Failed to add edge node:', err);
-            window.alert(`Could not save edge node. Ensure backend is running on port 3001.\n\n${err.message || err}`);
+            setCreateError(err.message || 'Could not save edge node.');
+            toast({
+                title: 'Save failed',
+                description: err.message || 'Could not save edge node.',
+                variant: 'destructive',
+            });
+        } finally {
+            setIsSavingNode(false);
         }
     };
 
@@ -163,7 +221,13 @@ const FederatedLearningPage = () => {
                         <Button variant="destructive" size="sm" className="h-9 bg-red-900/30 hover:bg-red-900/50 text-red-200 border border-red-900/50">
                             <AlertTriangle className="w-4 h-4 mr-2" /> Safe Mode
                         </Button>
-                        <Button className="h-9 bg-purple-600 hover:bg-purple-700 text-white" onClick={handleAddNode}>
+                        <Button
+                            className="h-9 bg-purple-600 hover:bg-purple-700 text-white"
+                            onClick={() => {
+                                resetNodeForm();
+                                setCreateSheetOpen(true);
+                            }}
+                        >
                             <Database className="w-4 h-4 mr-2" /> Add Node
                         </Button>
                     </div>
@@ -334,6 +398,123 @@ const FederatedLearningPage = () => {
                     </div>
                 </div>
             </div>
+
+            <Sheet open={createSheetOpen} onOpenChange={setCreateSheetOpen}>
+                <SheetContent className="bg-[#111] border-l border-[#222] text-white w-[420px] sm:max-w-[520px] overflow-y-auto">
+                    <div className="space-y-6 pt-4">
+                        <SheetHeader className="text-left">
+                            <SheetTitle className="text-white text-xl">Add Edge Node</SheetTitle>
+                            <SheetDescription className="text-gray-400">
+                                Register a new edge node and persist it through the backend to Supabase.
+                            </SheetDescription>
+                        </SheetHeader>
+
+                        <div className="space-y-5">
+                            <div className="space-y-2">
+                                <label className="text-xs font-semibold uppercase tracking-wider text-gray-400">Node ID</label>
+                                <Input
+                                    value={newNode.id}
+                                    onChange={(e) => handleNodeFieldChange('id', e.target.value)}
+                                    placeholder="STORE-999"
+                                    className="bg-[#1a1a1a] border-[#333] text-white"
+                                />
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="space-y-2">
+                                    <label className="text-xs font-semibold uppercase tracking-wider text-gray-400">Status</label>
+                                    <Select value={newNode.status} onValueChange={(value) => handleNodeFieldChange('status', value)}>
+                                        <SelectTrigger className="bg-[#1a1a1a] border-[#333] text-white">
+                                            <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent className="bg-[#1a1a1a] border-[#333] text-white">
+                                            <SelectItem value="Ready">Ready</SelectItem>
+                                            <SelectItem value="Training">Training</SelectItem>
+                                            <SelectItem value="Idle">Idle</SelectItem>
+                                            <SelectItem value="Error">Error</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-xs font-semibold uppercase tracking-wider text-gray-400">Drift</label>
+                                    <Select value={newNode.drift} onValueChange={(value) => handleNodeFieldChange('drift', value)}>
+                                        <SelectTrigger className="bg-[#1a1a1a] border-[#333] text-white">
+                                            <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent className="bg-[#1a1a1a] border-[#333] text-white">
+                                            <SelectItem value="Low">Low</SelectItem>
+                                            <SelectItem value="Medium">Medium</SelectItem>
+                                            <SelectItem value="High">High</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-3 gap-4">
+                                <div className="space-y-2">
+                                    <label className="text-xs font-semibold uppercase tracking-wider text-gray-400">Round</label>
+                                    <Input
+                                        type="number"
+                                        min="1"
+                                        value={newNode.round}
+                                        onChange={(e) => handleNodeFieldChange('round', e.target.value)}
+                                        className="bg-[#1a1a1a] border-[#333] text-white"
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-xs font-semibold uppercase tracking-wider text-gray-400">Accuracy</label>
+                                    <Input
+                                        type="number"
+                                        min="0"
+                                        max="100"
+                                        step="0.1"
+                                        value={newNode.accuracy}
+                                        onChange={(e) => handleNodeFieldChange('accuracy', e.target.value)}
+                                        className="bg-[#1a1a1a] border-[#333] text-white"
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-xs font-semibold uppercase tracking-wider text-gray-400">Weight</label>
+                                    <Input
+                                        type="number"
+                                        min="0"
+                                        step="0.1"
+                                        value={newNode.weight}
+                                        onChange={(e) => handleNodeFieldChange('weight', e.target.value)}
+                                        className="bg-[#1a1a1a] border-[#333] text-white"
+                                    />
+                                </div>
+                            </div>
+
+                            {createError && (
+                                <div className="rounded-lg border border-red-900/60 bg-red-950/30 px-3 py-2 text-sm text-red-300">
+                                    {createError}
+                                </div>
+                            )}
+                        </div>
+
+                        <SheetFooter className="gap-2 sm:justify-end">
+                            <Button
+                                variant="outline"
+                                className="border-[#333] text-gray-300 bg-transparent"
+                                onClick={() => {
+                                    setCreateSheetOpen(false);
+                                    resetNodeForm();
+                                }}
+                            >
+                                Cancel
+                            </Button>
+                            <Button
+                                className="bg-purple-600 hover:bg-purple-700 text-white"
+                                onClick={handleAddNode}
+                                disabled={isSavingNode}
+                            >
+                                {isSavingNode ? 'Saving...' : 'Save Node'}
+                            </Button>
+                        </SheetFooter>
+                    </div>
+                </SheetContent>
+            </Sheet>
         </div>
     );
 };

@@ -25,7 +25,9 @@ import {
     Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger,
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
+import { Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { backendModuleService } from '@/services/backendModuleService';
+import { toast } from '@/hooks/use-toast';
 
 // --- MOCK DATA ---
 
@@ -121,11 +123,33 @@ const StockRebalancingPage = () => {
     const [selectedTransfer, setSelectedTransfer] = useState(null);
     const [approvalDialogOpen, setApprovalDialogOpen] = useState(false);
     const [transferRecommendations, setTransferRecommendations] = useState(FALLBACK_TRANSFER_RECOMMENDATIONS);
+    const [createSheetOpen, setCreateSheetOpen] = useState(false);
+    const [isSavingRecommendation, setIsSavingRecommendation] = useState(false);
+    const [createError, setCreateError] = useState('');
     const [summary, setSummary] = useState({
         excessStockUnits: 2450,
         spoilageRisk: 'High',
         lowDemandConfidence: '42%',
         insight: 'Store 402 has a surplus of perishable goods due to a cancelled local event. Store 115 is facing shortages for the same items.'
+    });
+    const [newRecommendation, setNewRecommendation] = useState({
+        marketingName: '',
+        sourceStore: 'Store 402 (North)',
+        destStore: 'Store 115 (Downtown)',
+        qty: '50',
+        unit: 'Units',
+        demandGap: '+50 Units',
+        riskReduction: 'Medium',
+        priority: 'High',
+        confidence: '85',
+        time: '35 mins',
+        feasibility: 'Feasible',
+        coldChain: false,
+        sourceOverstock: 'Moderate',
+        sourceSpoilageRisk: 'Low',
+        sourceForecast: 'Flat',
+        destStockoutRisk: 'Medium',
+        destForecast: 'Rising',
     });
 
     React.useEffect(() => {
@@ -148,48 +172,84 @@ const StockRebalancingPage = () => {
         try {
             await backendModuleService.approveStockTransfer(selectedTransfer.id, 'demand');
             setTransferRecommendations(prev => prev.filter(rec => rec.id !== selectedTransfer.id));
-            window.alert('Transfer approved and saved.');
+            toast({
+                title: 'Transfer approved',
+                description: 'The recommendation was approved and synced successfully.',
+            });
         } catch (err) {
             console.error('Transfer approval failed:', err);
-            window.alert(`Could not approve transfer. Ensure backend is running on port 3001.\n\n${err.message || err}`);
+            toast({
+                title: 'Approval failed',
+                description: err.message || 'Could not approve transfer.',
+                variant: 'destructive',
+            });
         } finally {
             setApprovalDialogOpen(false);
             setSelectedTransfer(null);
         }
     };
 
-    const handleAddRecommendation = async () => {
-        const marketingName = window.prompt('Product/Recommendation name');
-        if (!marketingName) return;
-
-        const sourceStore = window.prompt('Source store', 'Store 402 (North)') || 'Store 402 (North)';
-        const destStore = window.prompt('Destination store', 'Store 115 (Downtown)') || 'Store 115 (Downtown)';
-
-        const recommendation = {
-            id: `TRF-${Date.now()}`,
-            sku: marketingName,
-            skuId: `SKU-${Math.floor(Math.random() * 10000)}`,
-            sourceStore,
-            destStore,
-            marketingName,
-            qty: 50,
+    const resetRecommendationForm = () => {
+        setNewRecommendation({
+            marketingName: '',
+            sourceStore: 'Store 402 (North)',
+            destStore: 'Store 115 (Downtown)',
+            qty: '50',
             unit: 'Units',
             demandGap: '+50 Units',
             riskReduction: 'Medium',
             priority: 'High',
-            confidence: 85,
-            distance: '10 miles',
+            confidence: '85',
             time: '35 mins',
             feasibility: 'Feasible',
             coldChain: false,
+            sourceOverstock: 'Moderate',
+            sourceSpoilageRisk: 'Low',
+            sourceForecast: 'Flat',
+            destStockoutRisk: 'Medium',
+            destForecast: 'Rising',
+        });
+        setCreateError('');
+    };
+
+    const handleRecommendationFieldChange = (field, value) => {
+        setNewRecommendation((prev) => ({ ...prev, [field]: value }));
+    };
+
+    const handleAddRecommendation = async () => {
+        if (!newRecommendation.marketingName.trim()) {
+            setCreateError('Product name is required.');
+            return;
+        }
+
+        setIsSavingRecommendation(true);
+        setCreateError('');
+
+        const recommendation = {
+            id: `TRF-${Date.now()}`,
+            sku: newRecommendation.marketingName.trim(),
+            skuId: `SKU-${Math.floor(Math.random() * 10000)}`,
+            sourceStore: newRecommendation.sourceStore.trim() || 'Store 402 (North)',
+            destStore: newRecommendation.destStore.trim() || 'Store 115 (Downtown)',
+            marketingName: newRecommendation.marketingName.trim(),
+            qty: Number(newRecommendation.qty) || 50,
+            unit: newRecommendation.unit,
+            demandGap: newRecommendation.demandGap.trim() || '+50 Units',
+            riskReduction: newRecommendation.riskReduction,
+            priority: newRecommendation.priority,
+            confidence: Number(newRecommendation.confidence) || 85,
+            distance: '10 miles',
+            time: newRecommendation.time.trim() || '35 mins',
+            feasibility: newRecommendation.feasibility,
+            coldChain: newRecommendation.coldChain,
             sourceMetrics: {
-                overstock: 'Moderate',
-                spoilageRisk: 'Low',
-                forecast: 'Flat'
+                overstock: newRecommendation.sourceOverstock,
+                spoilageRisk: newRecommendation.sourceSpoilageRisk,
+                forecast: newRecommendation.sourceForecast
             },
             destMetrics: {
-                stockoutRisk: 'Medium',
-                forecast: 'Rising',
+                stockoutRisk: newRecommendation.destStockoutRisk,
+                forecast: newRecommendation.destForecast,
                 promoActive: false
             }
         };
@@ -197,10 +257,22 @@ const StockRebalancingPage = () => {
         try {
             await backendModuleService.addModuleItem('stockRebalancing', 'recommendations', recommendation);
             setTransferRecommendations((prev) => [recommendation, ...prev]);
-            window.alert('Recommendation added successfully.');
+            setCreateSheetOpen(false);
+            resetRecommendationForm();
+            toast({
+                title: 'Recommendation saved',
+                description: 'The stock rebalancing recommendation was added successfully.',
+            });
         } catch (err) {
             console.error('Failed to add stock recommendation:', err);
-            window.alert(`Could not save recommendation. Ensure backend is running on port 3001.\n\n${err.message || err}`);
+            setCreateError(err.message || 'Could not save recommendation.');
+            toast({
+                title: 'Save failed',
+                description: err.message || 'Could not save recommendation.',
+                variant: 'destructive',
+            });
+        } finally {
+            setIsSavingRecommendation(false);
         }
     };
 
@@ -232,7 +304,13 @@ const StockRebalancingPage = () => {
                                 <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse mr-2"></span>
                                 <span className="text-xs text-gray-300 font-medium">Inventory Data: Live</span>
                             </div>
-                            <Button className="h-9 bg-purple-600 hover:bg-purple-700 text-white" onClick={handleAddRecommendation}>
+                            <Button
+                                className="h-9 bg-purple-600 hover:bg-purple-700 text-white"
+                                onClick={() => {
+                                    resetRecommendationForm();
+                                    setCreateSheetOpen(true);
+                                }}
+                            >
                                 <ShoppingCart className="w-4 h-4 mr-2" /> Add Recommendation
                             </Button>
                         </div>
@@ -537,6 +615,239 @@ const StockRebalancingPage = () => {
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
+
+            <Sheet open={createSheetOpen} onOpenChange={setCreateSheetOpen}>
+                <SheetContent className="bg-[#111] border-l border-[#222] text-white w-[540px] sm:max-w-[580px] overflow-y-auto">
+                    <div className="space-y-6 pt-4">
+                        <SheetHeader className="text-left">
+                            <SheetTitle className="text-white text-xl">Add Recommendation</SheetTitle>
+                            <SheetDescription className="text-gray-400">
+                                Create a new inter-store recommendation and save it through the backend to Supabase.
+                            </SheetDescription>
+                        </SheetHeader>
+
+                        <div className="space-y-5">
+                            <div className="space-y-2">
+                                <label className="text-xs font-semibold uppercase tracking-wider text-gray-400">Product Name</label>
+                                <Input
+                                    value={newRecommendation.marketingName}
+                                    onChange={(e) => handleRecommendationFieldChange('marketingName', e.target.value)}
+                                    placeholder="Organic Hass Avocados"
+                                    className="bg-[#1a1a1a] border-[#333] text-white"
+                                />
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="space-y-2">
+                                    <label className="text-xs font-semibold uppercase tracking-wider text-gray-400">Source Store</label>
+                                    <Input
+                                        value={newRecommendation.sourceStore}
+                                        onChange={(e) => handleRecommendationFieldChange('sourceStore', e.target.value)}
+                                        className="bg-[#1a1a1a] border-[#333] text-white"
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-xs font-semibold uppercase tracking-wider text-gray-400">Destination Store</label>
+                                    <Input
+                                        value={newRecommendation.destStore}
+                                        onChange={(e) => handleRecommendationFieldChange('destStore', e.target.value)}
+                                        className="bg-[#1a1a1a] border-[#333] text-white"
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="space-y-2">
+                                    <label className="text-xs font-semibold uppercase tracking-wider text-gray-400">Quantity</label>
+                                    <Input
+                                        type="number"
+                                        min="1"
+                                        value={newRecommendation.qty}
+                                        onChange={(e) => handleRecommendationFieldChange('qty', e.target.value)}
+                                        className="bg-[#1a1a1a] border-[#333] text-white"
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-xs font-semibold uppercase tracking-wider text-gray-400">Unit</label>
+                                    <Select value={newRecommendation.unit} onValueChange={(value) => handleRecommendationFieldChange('unit', value)}>
+                                        <SelectTrigger className="bg-[#1a1a1a] border-[#333] text-white">
+                                            <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="Units">Units</SelectItem>
+                                            <SelectItem value="Cartons">Cartons</SelectItem>
+                                            <SelectItem value="Loaves">Loaves</SelectItem>
+                                            <SelectItem value="Crates">Crates</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="space-y-2">
+                                    <label className="text-xs font-semibold uppercase tracking-wider text-gray-400">Priority</label>
+                                    <Select value={newRecommendation.priority} onValueChange={(value) => handleRecommendationFieldChange('priority', value)}>
+                                        <SelectTrigger className="bg-[#1a1a1a] border-[#333] text-white">
+                                            <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="Critical">Critical</SelectItem>
+                                            <SelectItem value="High">High</SelectItem>
+                                            <SelectItem value="Medium">Medium</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-xs font-semibold uppercase tracking-wider text-gray-400">Risk Reduction</label>
+                                    <Select value={newRecommendation.riskReduction} onValueChange={(value) => handleRecommendationFieldChange('riskReduction', value)}>
+                                        <SelectTrigger className="bg-[#1a1a1a] border-[#333] text-white">
+                                            <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="High">High</SelectItem>
+                                            <SelectItem value="Medium">Medium</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="space-y-2">
+                                    <label className="text-xs font-semibold uppercase tracking-wider text-gray-400">Demand Gap</label>
+                                    <Input
+                                        value={newRecommendation.demandGap}
+                                        onChange={(e) => handleRecommendationFieldChange('demandGap', e.target.value)}
+                                        placeholder="+50 Units"
+                                        className="bg-[#1a1a1a] border-[#333] text-white"
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-xs font-semibold uppercase tracking-wider text-gray-400">Confidence</label>
+                                    <Input
+                                        type="number"
+                                        min="1"
+                                        max="100"
+                                        value={newRecommendation.confidence}
+                                        onChange={(e) => handleRecommendationFieldChange('confidence', e.target.value)}
+                                        className="bg-[#1a1a1a] border-[#333] text-white"
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="space-y-2">
+                                    <label className="text-xs font-semibold uppercase tracking-wider text-gray-400">ETA</label>
+                                    <Input
+                                        value={newRecommendation.time}
+                                        onChange={(e) => handleRecommendationFieldChange('time', e.target.value)}
+                                        placeholder="35 mins"
+                                        className="bg-[#1a1a1a] border-[#333] text-white"
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-xs font-semibold uppercase tracking-wider text-gray-400">Feasibility</label>
+                                    <Select value={newRecommendation.feasibility} onValueChange={(value) => handleRecommendationFieldChange('feasibility', value)}>
+                                        <SelectTrigger className="bg-[#1a1a1a] border-[#333] text-white">
+                                            <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="Feasible">Feasible</SelectItem>
+                                            <SelectItem value="Risky">Risky</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                            </div>
+
+                            <div className="rounded-xl border border-[#222] bg-[#151515] p-4 space-y-4">
+                                <h3 className="text-sm font-semibold text-white">Operational Signals</h3>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="space-y-2">
+                                        <label className="text-xs uppercase tracking-wider text-gray-400">Source Overstock</label>
+                                        <Input
+                                            value={newRecommendation.sourceOverstock}
+                                            onChange={(e) => handleRecommendationFieldChange('sourceOverstock', e.target.value)}
+                                            className="bg-[#1a1a1a] border-[#333] text-white"
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-xs uppercase tracking-wider text-gray-400">Source Spoilage Risk</label>
+                                        <Input
+                                            value={newRecommendation.sourceSpoilageRisk}
+                                            onChange={(e) => handleRecommendationFieldChange('sourceSpoilageRisk', e.target.value)}
+                                            className="bg-[#1a1a1a] border-[#333] text-white"
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-xs uppercase tracking-wider text-gray-400">Source Forecast</label>
+                                        <Input
+                                            value={newRecommendation.sourceForecast}
+                                            onChange={(e) => handleRecommendationFieldChange('sourceForecast', e.target.value)}
+                                            className="bg-[#1a1a1a] border-[#333] text-white"
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-xs uppercase tracking-wider text-gray-400">Destination Stockout Risk</label>
+                                        <Input
+                                            value={newRecommendation.destStockoutRisk}
+                                            onChange={(e) => handleRecommendationFieldChange('destStockoutRisk', e.target.value)}
+                                            className="bg-[#1a1a1a] border-[#333] text-white"
+                                        />
+                                    </div>
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-xs uppercase tracking-wider text-gray-400">Destination Forecast</label>
+                                    <Input
+                                        value={newRecommendation.destForecast}
+                                        onChange={(e) => handleRecommendationFieldChange('destForecast', e.target.value)}
+                                        className="bg-[#1a1a1a] border-[#333] text-white"
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="flex items-center justify-between rounded-xl border border-[#222] bg-[#151515] px-4 py-3">
+                                <div>
+                                    <div className="text-sm font-medium text-white">Cold Chain Required</div>
+                                    <div className="text-xs text-gray-400">Turn this on for temperature-sensitive transfers.</div>
+                                </div>
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    className={`${newRecommendation.coldChain ? 'border-blue-500 text-blue-300 bg-blue-950/40' : 'border-[#333] text-gray-300 bg-transparent'}`}
+                                    onClick={() => handleRecommendationFieldChange('coldChain', !newRecommendation.coldChain)}
+                                >
+                                    {newRecommendation.coldChain ? 'Enabled' : 'Disabled'}
+                                </Button>
+                            </div>
+
+                            {createError && (
+                                <div className="rounded-lg border border-red-900/60 bg-red-950/30 px-3 py-2 text-sm text-red-300">
+                                    {createError}
+                                </div>
+                            )}
+                        </div>
+
+                        <SheetFooter className="gap-2 sm:justify-end">
+                            <Button
+                                variant="outline"
+                                className="border-[#333] text-gray-300 bg-transparent"
+                                onClick={() => {
+                                    setCreateSheetOpen(false);
+                                    resetRecommendationForm();
+                                }}
+                            >
+                                Cancel
+                            </Button>
+                            <Button
+                                className="bg-purple-600 hover:bg-purple-700 text-white"
+                                onClick={handleAddRecommendation}
+                                disabled={isSavingRecommendation}
+                            >
+                                {isSavingRecommendation ? 'Saving...' : 'Save Recommendation'}
+                            </Button>
+                        </SheetFooter>
+                    </div>
+                </SheetContent>
+            </Sheet>
 
         </div>
     );

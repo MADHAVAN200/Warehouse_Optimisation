@@ -20,6 +20,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetFo
 import { Progress } from "@/components/ui/progress";
 import { Separator } from '@/components/ui/separator';
 import { backendModuleService } from '@/services/backendModuleService';
+import { toast } from '@/hooks/use-toast';
 
 // --- Mock Data ---
 
@@ -132,8 +133,24 @@ export default function LogisticsPage() {
   const navigate = useNavigate();
   const [selectedTransfer, setSelectedTransfer] = useState(null);
   const [detailOpen, setDetailOpen] = useState(false);
+  const [createSheetOpen, setCreateSheetOpen] = useState(false);
+  const [isSavingTransfer, setIsSavingTransfer] = useState(false);
+  const [createError, setCreateError] = useState('');
   const [kpiMetrics, setKpiMetrics] = useState(FALLBACK_KPI_METRICS);
   const [transfersData, setTransfersData] = useState(FALLBACK_TRANSFERS_DATA);
+  const [newTransfer, setNewTransfer] = useState({
+    product: '',
+    source: 'DC-North (Warehouse)',
+    destination: 'Store #104 (Downtown)',
+    type: 'Warehouse -> Store',
+    qty: '100',
+    unit: 'units',
+    status: 'Planned',
+    eta: 'Tomorrow, 10:00',
+    slaStatus: 'On Track',
+    riskLevel: 'Low',
+    coldChain: false,
+  });
 
   const iconMap = {
     Truck,
@@ -186,37 +203,72 @@ export default function LogisticsPage() {
     }
   };
 
-  const handleAddTransfer = async () => {
-    const product = window.prompt('Product name');
-    if (!product) return;
+  const resetTransferForm = () => {
+    setNewTransfer({
+      product: '',
+      source: 'DC-North (Warehouse)',
+      destination: 'Store #104 (Downtown)',
+      type: 'Warehouse -> Store',
+      qty: '100',
+      unit: 'units',
+      status: 'Planned',
+      eta: 'Tomorrow, 10:00',
+      slaStatus: 'On Track',
+      riskLevel: 'Low',
+      coldChain: false,
+    });
+    setCreateError('');
+  };
 
-    const source = window.prompt('Source', 'DC-North') || 'DC-North';
-    const destination = window.prompt('Destination', 'Store #104') || 'Store #104';
+  const handleTransferFieldChange = (field, value) => {
+    setNewTransfer((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const handleAddTransfer = async () => {
+    if (!newTransfer.product.trim()) {
+      setCreateError('Product name is required.');
+      return;
+    }
+
+    setIsSavingTransfer(true);
+    setCreateError('');
 
     const transfer = {
       id: `TRF-${Date.now()}`,
       sku: `SKU-${Math.floor(Math.random() * 10000)}`,
-      product,
-      qty: 100,
-      unit: 'units',
-      source,
-      destination,
-      type: 'Warehouse -> Store',
-      status: 'Planned',
-      eta: 'Tomorrow, 10:00',
-      sla_status: 'On Track',
-      cold_chain: false,
-      risk_level: 'Low',
-      events: [{ time: 'Now', event: 'Transfer created', location: source }]
+      product: newTransfer.product.trim(),
+      qty: Number(newTransfer.qty) || 100,
+      unit: newTransfer.unit,
+      source: newTransfer.source.trim() || 'DC-North (Warehouse)',
+      destination: newTransfer.destination.trim() || 'Store #104 (Downtown)',
+      type: newTransfer.type,
+      status: newTransfer.status,
+      eta: newTransfer.eta.trim() || 'Tomorrow, 10:00',
+      sla_status: newTransfer.slaStatus,
+      cold_chain: newTransfer.coldChain,
+      risk_level: newTransfer.riskLevel,
+      events: [{ time: 'Now', event: 'Transfer created', location: newTransfer.source.trim() || 'DC-North (Warehouse)' }]
     };
 
     try {
       await backendModuleService.addModuleItem('logistics', 'transfers', transfer);
       setTransfersData((prev) => [transfer, ...prev]);
-      window.alert('Transfer added successfully.');
+      setCreateSheetOpen(false);
+      resetTransferForm();
+      toast({
+        title: 'Transfer saved',
+        description: 'The logistics transfer has been added successfully.',
+      });
     } catch (err) {
       console.error('Failed to add transfer:', err);
-      window.alert(`Could not save transfer. Ensure backend is running on port 3001.\n\n${err.message || err}`);
+      setCreateError(err.message || 'Could not save transfer.');
+      toast({
+        title: 'Save failed',
+        description: err.message || 'Could not save transfer.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsSavingTransfer(false);
     }
   };
 
@@ -319,7 +371,13 @@ export default function LogisticsPage() {
             <Button className="bg-blue-600 hover:bg-blue-700 text-white">
               <Filter className="w-4 h-4 mr-2" /> Apply
             </Button>
-            <Button className="bg-purple-600 hover:bg-purple-700 text-white" onClick={handleAddTransfer}>
+            <Button
+              className="bg-purple-600 hover:bg-purple-700 text-white"
+              onClick={() => {
+                resetTransferForm();
+                setCreateSheetOpen(true);
+              }}
+            >
               <Truck className="w-4 h-4 mr-2" /> Add Transfer
             </Button>
           </div>
@@ -533,6 +591,178 @@ export default function LogisticsPage() {
               </div>
             </>
           )}
+        </SheetContent>
+      </Sheet>
+
+      <Sheet open={createSheetOpen} onOpenChange={setCreateSheetOpen}>
+        <SheetContent className="w-[420px] sm:w-[560px] bg-[#111] border-l border-[#222] text-white overflow-y-auto">
+          <div className="space-y-6 pt-4">
+            <SheetHeader className="text-left">
+              <SheetTitle className="text-white text-xl">Add Transfer</SheetTitle>
+              <SheetDescription className="text-gray-400">
+                Create a new logistics transfer and save it through the backend to Supabase.
+              </SheetDescription>
+            </SheetHeader>
+
+            <div className="space-y-5">
+              <div className="space-y-2">
+                <label className="text-xs font-semibold uppercase tracking-wider text-gray-400">Product Name</label>
+                <Input
+                  value={newTransfer.product}
+                  onChange={(e) => handleTransferFieldChange('product', e.target.value)}
+                  placeholder="Organic Honeycrisp Apples"
+                  className="bg-[#1a1a1a] border-[#333] text-white"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-xs font-semibold uppercase tracking-wider text-gray-400">Source</label>
+                  <Input
+                    value={newTransfer.source}
+                    onChange={(e) => handleTransferFieldChange('source', e.target.value)}
+                    className="bg-[#1a1a1a] border-[#333] text-white"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-xs font-semibold uppercase tracking-wider text-gray-400">Destination</label>
+                  <Input
+                    value={newTransfer.destination}
+                    onChange={(e) => handleTransferFieldChange('destination', e.target.value)}
+                    className="bg-[#1a1a1a] border-[#333] text-white"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-xs font-semibold uppercase tracking-wider text-gray-400">Transfer Type</label>
+                  <Select value={newTransfer.type} onValueChange={(value) => handleTransferFieldChange('type', value)}>
+                    <SelectTrigger className="bg-[#1a1a1a] border-[#333] text-white">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="bg-[#1a1a1a] border-[#333] text-white">
+                      <SelectItem value="Warehouse -> Store">Warehouse to Store</SelectItem>
+                      <SelectItem value="Inter-store">Inter-store</SelectItem>
+                      <SelectItem value="Vendor -> Warehouse">Vendor to Warehouse</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-xs font-semibold uppercase tracking-wider text-gray-400">Status</label>
+                  <Select value={newTransfer.status} onValueChange={(value) => handleTransferFieldChange('status', value)}>
+                    <SelectTrigger className="bg-[#1a1a1a] border-[#333] text-white">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="bg-[#1a1a1a] border-[#333] text-white">
+                      <SelectItem value="Planned">Planned</SelectItem>
+                      <SelectItem value="In Transit">In Transit</SelectItem>
+                      <SelectItem value="Delayed">Delayed</SelectItem>
+                      <SelectItem value="Dispatched">Dispatched</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-xs font-semibold uppercase tracking-wider text-gray-400">Quantity</label>
+                  <Input
+                    type="number"
+                    min="1"
+                    value={newTransfer.qty}
+                    onChange={(e) => handleTransferFieldChange('qty', e.target.value)}
+                    className="bg-[#1a1a1a] border-[#333] text-white"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-xs font-semibold uppercase tracking-wider text-gray-400">Unit</label>
+                  <Input
+                    value={newTransfer.unit}
+                    onChange={(e) => handleTransferFieldChange('unit', e.target.value)}
+                    className="bg-[#1a1a1a] border-[#333] text-white"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-xs font-semibold uppercase tracking-wider text-gray-400">ETA</label>
+                  <Input
+                    value={newTransfer.eta}
+                    onChange={(e) => handleTransferFieldChange('eta', e.target.value)}
+                    className="bg-[#1a1a1a] border-[#333] text-white"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-xs font-semibold uppercase tracking-wider text-gray-400">SLA Status</label>
+                  <Select value={newTransfer.slaStatus} onValueChange={(value) => handleTransferFieldChange('slaStatus', value)}>
+                    <SelectTrigger className="bg-[#1a1a1a] border-[#333] text-white">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="bg-[#1a1a1a] border-[#333] text-white">
+                      <SelectItem value="On Track">On Track</SelectItem>
+                      <SelectItem value="At Risk">At Risk</SelectItem>
+                      <SelectItem value="Critical">Critical</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-xs font-semibold uppercase tracking-wider text-gray-400">Risk Level</label>
+                  <Select value={newTransfer.riskLevel} onValueChange={(value) => handleTransferFieldChange('riskLevel', value)}>
+                    <SelectTrigger className="bg-[#1a1a1a] border-[#333] text-white">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="bg-[#1a1a1a] border-[#333] text-white">
+                      <SelectItem value="Low">Low</SelectItem>
+                      <SelectItem value="Medium">Medium</SelectItem>
+                      <SelectItem value="High">High</SelectItem>
+                      <SelectItem value="Critical">Critical</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="flex items-end">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className={`w-full ${newTransfer.coldChain ? 'border-blue-500 text-blue-300 bg-blue-950/40' : 'border-[#333] text-gray-300 bg-transparent'}`}
+                    onClick={() => handleTransferFieldChange('coldChain', !newTransfer.coldChain)}
+                  >
+                    {newTransfer.coldChain ? 'Cold Chain On' : 'Cold Chain Off'}
+                  </Button>
+                </div>
+              </div>
+
+              {createError && (
+                <div className="rounded-lg border border-red-900/60 bg-red-950/30 px-3 py-2 text-sm text-red-300">
+                  {createError}
+                </div>
+              )}
+            </div>
+
+            <SheetFooter className="gap-2 sm:justify-end">
+              <Button
+                variant="outline"
+                className="border-[#333] text-gray-300 bg-transparent"
+                onClick={() => {
+                  setCreateSheetOpen(false);
+                  resetTransferForm();
+                }}
+              >
+                Cancel
+              </Button>
+              <Button
+                className="bg-purple-600 hover:bg-purple-700 text-white"
+                onClick={handleAddTransfer}
+                disabled={isSavingTransfer}
+              >
+                {isSavingTransfer ? 'Saving...' : 'Save Transfer'}
+              </Button>
+            </SheetFooter>
+          </div>
         </SheetContent>
       </Sheet>
     </div>
