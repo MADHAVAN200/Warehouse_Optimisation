@@ -1,8 +1,6 @@
-# Smartstock
+# AI Powered forecasting, inventory and optimization system
 
-Smartstock is an AI-assisted warehouse and retail operations platform designed to improve inventory accuracy, reduce operational waste, and give teams a unified view of logistics, demand signals, and checkout verification. The project combines a modern operations dashboard with Python-powered intelligence modules so forecasting, risk detection, and computer vision can live inside one workflow instead of scattered prototypes.
-
-## What Smartstock Solves
+AI Powered forecasting, inventory and optimization system is a comprehensive, enterprise-level AI solution designed to revolutionize fresh food inventory management. Built as a part of the **Walmart Sparkathon Initiative**, the platform unifies the supply chain—from vendors to retail staff—using advanced predictive analytics, autonomous vision systems, and federated learning to eliminate waste and maximize delivery value.
 
 Smartstock is built around a practical operations problem: decisions in supply chains often break down because system data and physical reality drift apart. Teams may know what the ERP says is in stock, but they still struggle with:
 
