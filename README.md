@@ -1,8 +1,6 @@
-# Walmart OptiFresh - AI-Powered Inventory Intelligence
+# AI Powered forecasting, inventory and optimization system
 
-**Intelligent Freshness. Zero Waste.**
-
-Walmart OptiFresh is a comprehensive, enterprise-level AI solution designed to revolutionize fresh food inventory management. Built as a part of the **Walmart Sparkathon Initiative**, the platform unifies the supply chain—from vendors to retail staff—using advanced predictive analytics, autonomous vision systems, and federated learning to eliminate waste and maximize delivery value.
+AI Powered forecasting, inventory and optimization system is a comprehensive, enterprise-level AI solution designed to revolutionize fresh food inventory management. Built as a part of the **Walmart Sparkathon Initiative**, the platform unifies the supply chain—from vendors to retail staff—using advanced predictive analytics, autonomous vision systems, and federated learning to eliminate waste and maximize delivery value.
 
 ---
 
