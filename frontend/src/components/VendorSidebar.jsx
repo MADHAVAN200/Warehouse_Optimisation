@@ -5,9 +5,11 @@ import {
     Package, MapPin, LogOut, Store, ShieldCheck, FileText
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useAuth } from '@/context/AuthContext';
 
 const VendorSidebar = () => {
     const navigate = useNavigate();
+    const { signOut, role } = useAuth();
     const location = useLocation();
 
     const isActive = (path) => location.pathname === path;
@@ -56,7 +58,7 @@ const VendorSidebar = () => {
                         <p className="text-xs text-gray-500 truncate">VN-8274</p>
                     </div>
                 </div>
-                <Button variant="ghost" className="w-full justify-start text-gray-400 hover:text-white hover:bg-[#222]" onClick={() => navigate('/')}>
+                <Button variant="ghost" className="w-full justify-start text-gray-400 hover:text-white hover:bg-[#222]" onClick={signOut}>
                     <LogOut className="w-5 h-5 mr-3" />
                     <span className="hidden md:block">Sign Out</span>
                 </Button>

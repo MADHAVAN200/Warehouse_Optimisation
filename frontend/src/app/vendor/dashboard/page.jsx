@@ -19,6 +19,7 @@ import {
 } from '@/components/ui/table';
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
+import { useAuth } from '@/context/AuthContext';
 
 // --- MOCK DATA ---
 const PRODUCTS_DATA = [
@@ -55,6 +56,7 @@ const NOTIFICATIONS_DATA = [
 
 export default function VendorDashboardPage() {
   const navigate = useNavigate();
+  const { signOut } = useAuth();
   const [activeTab, setActiveTab] = useState("dashboard");
 
   const NAV_ITEMS = [
@@ -123,7 +125,7 @@ export default function VendorDashboardPage() {
               <p className="text-xs text-gray-500 truncate">VN-8274</p>
             </div>
           </div>
-          <Button variant="ghost" className="w-full justify-start text-gray-400 hover:text-white hover:bg-[#222]" onClick={() => navigate('/login')}>
+          <Button variant="ghost" className="w-full justify-start text-gray-400 hover:text-white hover:bg-[#222]" onClick={signOut}>
             <LogOut className="w-5 h-5 mr-3" />
             <span className="hidden md:block">Sign Out</span>
           </Button>

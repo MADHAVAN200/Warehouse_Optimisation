@@ -2,9 +2,50 @@ import { supabase } from '@/supabaseClient';
 
 /**
  * Master Data Service
- * Handles fetching of core organizational entities like Cities, Categories, and Products.
+ * Handles fetching of core organizational entities like Regions, Cities, Categories, and Products.
  */
 export const masterDataService = {
+    /**
+     * Fetches all regions.
+     */
+    async getRegions() {
+        const { data, error } = await supabase
+            .from('regions')
+            .select('region_id, region_name')
+            .order('region_name');
+        if (error) throw error;
+        return data;
+    },
+
+    /**
+     * Fetches all stores, optionally filtered by region/city.
+     */
+    async getStores({ regionId, cityId, cityIds } = {}) {
+        let query = supabase
+            .from('stores')
+            .select(`
+                store_id, 
+                store_name,
+                city_id,
+                cities (
+                    city_id,
+                    city_name,
+                    region_id
+                )
+            `);
+
+        if (cityIds && cityIds.length > 0) {
+            query = query.in('city_id', cityIds);
+        } else if (cityId && cityId !== 'all') {
+            query = query.eq('city_id', cityId);
+        } else if (regionId && regionId !== 'all') {
+            query = query.eq('cities.region_id', regionId);
+        }
+
+        const { data, error } = await query.order('store_name');
+        if (error) throw error;
+        return data;
+    },
     /**
      * Fetches all cities.
      */

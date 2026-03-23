@@ -1,8 +1,7 @@
-import { useLocation, useNavigate } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { LogOut, Store, Package, ShoppingCart, Truck } from "lucide-react";
+import { useAuth } from "@/context/AuthContext";
+
 export function UniversalHeader() {
+  const { signOut } = useAuth();
   const location = useLocation();
   const pathname = location.pathname;
   const navigate = useNavigate();
@@ -10,24 +9,11 @@ export function UniversalHeader() {
   // Don't show header on login page or control tower (as it has its own shell)
   // Also hiding for intelligence modules for full-screen immersion
   if (pathname === "/" || pathname === "/login" ||
-    pathname === "/event-intelligence" ||
-    pathname === "/trend-intelligence" ||
-    pathname === "/weather-intelligence" ||
-    pathname === "/forecast-engine" ||
-    pathname === "/scenario-planning" ||
-    pathname === "/inventory-risk" ||
-    pathname === "/store-health" ||
-    pathname === "/live-checkout" ||
-    pathname === "/checkout-vision" ||
-    pathname === "/checkout-analytics" ||
-    pathname === "/federated-learning" ||
-    pathname === "/model-health" ||
-    pathname === "/alerts" ||
-    pathname === "/stock-rebalancing" ||
+    pathname.startsWith("/control-tower") ||
     pathname === "/vendor")
     return null;
   const handleSignOut = () => {
-    navigate("/");
+    signOut();
   };
   const getRoleInfo = () => {
     if (pathname.startsWith("/dashboard")) {
@@ -100,7 +86,7 @@ export function UniversalHeader() {
       <div className="flex items-center space-x-3">
         <Button variant="outline" size="sm" onClick={handleSignOut} className="border-gray-200 hover:bg-gray-50 bg-transparent">
           <LogOut className="w-4 h-4 mr-2" />
-          Home
+          Sign Out
         </Button>
       </div>
     </div>

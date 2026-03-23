@@ -5,7 +5,7 @@ import time
 
 dir_path = os.path.dirname(os.path.realpath(__file__))
 notebook_path = os.path.join(dir_path, "train_weather.ipynb")
-report_path = os.path.join(dir_path, "training_report.json")
+report_path = os.path.join(dir_path, "..", "reports", "weather_intelligence.json")
 
 print(f"Executing {notebook_path}...")
 try:
