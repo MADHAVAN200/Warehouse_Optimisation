@@ -215,6 +215,35 @@ export const moduleDataSeed = {
             { id: 2, time: '10:44:22', event: 'Store-402 submitted local gradients (Size: 45MB)', type: 'success' },
             { id: 3, time: '10:30:15', event: 'Store-055 connection timeout - dropped from round', type: 'error' }
         ]
+    },
+    checkout: {
+        kpis: [
+            { label: 'Total Daily Revenue', value: 'Rs. 58,420.00', trend: '+12.5%', status: 'success', icon: 'ShoppingCart' },
+            { label: 'Total Transactions', value: '284', trend: '+18', status: 'success', icon: 'Clock' },
+            { label: 'Avg Basket Size', value: 'Rs. 205.70', trend: '+3.2%', status: 'success', icon: 'Package' },
+            { label: 'System Accuracy', value: '99.2%', trend: '+0.1%', status: 'success', icon: 'ShieldCheck' },
+        ],
+        transactions: [
+            // Lane 01 (Express)
+            { id: 'TXN-EX-101', lane: 'Lane 01', customer: 'John Doe', timestamp: '2026-03-23 10:15:22', items: [{ name: 'Milk', qty: 1, price: 45 }, { name: 'Bread', qty: 1, price: 30 }], subtotal: 75, tax: 13.5, total: 88.5, paymentMethod: 'UPI', status: 'Completed' },
+            { id: 'TXN-EX-102', lane: 'Lane 01', customer: 'Guest #992', timestamp: '2026-03-23 10:18:45', items: [{ name: 'Coke 500ml', qty: 2, price: 40 }], subtotal: 80, tax: 14.4, total: 94.4, paymentMethod: 'Cash', status: 'Completed' },
+            { id: 'TXN-EX-105', lane: 'Lane 01', customer: 'Guest #105', timestamp: '2026-03-23 12:05:00', items: [{ name: 'Snickers', qty: 5, price: 40 }], subtotal: 200, tax: 36, total: 236, paymentMethod: 'Cash', status: 'Completed' },
+            
+            // Lane 04 (Regular)
+            { id: 'TXN-RG-401', lane: 'Lane 04', customer: 'Alice Wong', timestamp: '2026-03-23 11:05:12', items: [{ name: 'Rice 5kg', qty: 1, price: 450 }, { name: 'Dal 1kg', qty: 2, price: 120 }, { name: 'Oil 1L', qty: 1, price: 180 }], subtotal: 870, tax: 156.6, total: 1026.6, paymentMethod: 'Card', status: 'Completed' },
+            { id: 'TXN-RG-404', lane: 'Lane 04', customer: 'Mark Greene', timestamp: '2026-03-23 11:45:00', items: [{ name: 'Pasta', qty: 3, price: 85 }, { name: 'Sauce', qty: 2, price: 120 }, { name: 'Cheese', qty: 1, price: 250 }], subtotal: 745, tax: 134.1, total: 879.1, paymentMethod: 'UPI', status: 'Completed' },
+            
+            // Lane 07 (Bulk)
+            { id: 'TXN-BK-701', lane: 'Lane 07', customer: 'Hotel Grand', timestamp: '2026-03-23 09:30:00', items: [{ name: 'Sugar 50kg', qty: 2, price: 2200 }, { name: 'Flour 50kg', qty: 2, price: 1800 }], subtotal: 8000, tax: 1440, total: 9440, paymentMethod: 'Bank Transfer', status: 'Completed' },
+            { id: 'TXN-BK-703', lane: 'Lane 07', customer: 'City Hospital', timestamp: '2026-03-23 15:10:00', items: [{ name: 'Disinfectant 20L', qty: 5, price: 1200 }, { name: 'Hand Wash 5L', qty: 10, price: 600 }], subtotal: 12000, tax: 2160, total: 14160, paymentMethod: 'Card', status: 'Completed' },
+            
+            // Generic mix
+            { id: 'TXN-001', lane: 'Lane 02', customer: 'Guest #4102', timestamp: '2026-03-23 14:20:00', items: [{ name: 'Apples', qty: 2, price: 45.00 }, { name: 'Milk 2L', qty: 1, price: 28.50 }], subtotal: 118.50, tax: 21.33, total: 139.83, paymentMethod: 'Card', status: 'Completed' },
+            { id: 'TXN-002', lane: 'Lane 03', customer: 'Guest #8812', timestamp: '2026-03-23 15:05:00', items: [{ name: 'Avocados', qty: 4, price: 35.00 }], subtotal: 140.00, tax: 25.20, total: 165.20, paymentMethod: 'UPI', status: 'Completed' },
+            { id: 'TXN-003', lane: 'Lane 05', customer: 'Guest #1029', timestamp: '2026-03-23 15:15:00', items: [{ name: 'Bread', qty: 1, price: 22.00 }, { name: 'Soup Can', qty: 3, price: 12.50 }], subtotal: 59.50, tax: 10.71, total: 70.21, paymentMethod: 'Cash', status: 'Completed' },
+            { id: 'TXN-004', lane: 'Lane 06', customer: 'Guest #5521', timestamp: '2026-03-23 15:45:00', items: [{ name: 'Rice 5kg', qty: 1, price: 150.00 }, { name: 'Oil 1L', qty: 2, price: 18.00 }], subtotal: 186.00, tax: 33.48, total: 219.48, paymentMethod: 'Card', status: 'Completed' },
+            { id: 'TXN-005', lane: 'Lane 08', customer: 'Guest #3301', timestamp: '2026-03-23 16:00:00', items: [{ name: 'Body Wash', qty: 1, price: 42.00 }, { name: 'Coke 1.25L', qty: 2, price: 18.00 }], subtotal: 78.00, tax: 14.04, total: 92.04, paymentMethod: 'Card', status: 'Completed' }
+        ]
     }
 };
 

@@ -1,13 +1,31 @@
 "use client";
 
 import React, { useEffect, useMemo, useState } from 'react';
-import { AlertTriangle, Camera, Loader2, ScanSearch, Upload } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/context/AuthContext';
+import {
+    Activity, AlertTriangle, ArrowRightLeft, Camera, Eye, Image as ImageIcon,
+    LayoutDashboard, Loader2, LogOut, MapPin, Package,
+    ScanSearch, Store, Upload, User, Zap, Clock, ShoppingCart, 
+    CreditCard, Banknote, Smartphone, Receipt, Trash2, CheckCircle2,
+    ShieldCheck, ArrowRight
+} from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import {
+    Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
+} from '@/components/ui/table';
 import { checkoutVisionService } from '@/services/checkoutVisionService';
+import {
+    Breadcrumb, BreadcrumbList, BreadcrumbItem, BreadcrumbLink,
+    BreadcrumbPage, BreadcrumbSeparator
+} from '@/components/ui/breadcrumb';
+import { Home } from 'lucide-react';
+import Sidebar from '@/components/Sidebar';
+import { toast } from '@/hooks/use-toast';
 
 const DEFAULT_SAMPLE_IMAGE = '/checkout-vision/multiproduct.png';
 
@@ -16,84 +34,74 @@ function formatPercent(value) {
 }
 
 export default function CheckoutVisionPage() {
+    const navigate = useNavigate();
+    const { role } = useAuth();
     const [selectedFile, setSelectedFile] = useState(null);
     const [previewUrl, setPreviewUrl] = useState('');
     const [result, setResult] = useState(null);
     const [isAnalyzing, setIsAnalyzing] = useState(false);
+    const [isSaving, setIsSaving] = useState(false);
     const [error, setError] = useState('');
-    const [isLoadingSample, setIsLoadingSample] = useState(true);
+    const [isLoadingData, setIsLoadingData] = useState(true);
+    const [checkoutKpis, setCheckoutKpis] = useState([]);
+    const [transactions, setTransactions] = useState([]);
+    const [pendingBill, setPendingBill] = useState([]);
 
-    const totalDetections = result?.detections?.length || 0;
-    const topLabel = useMemo(() => {
-        if (!result?.item_counts?.length) return 'No detections yet';
-        return result.item_counts[0][0];
-    }, [result]);
+    const TAX_RATE = 0.18; // 18% Total Tax (SGST 9% + CGST 9%)
 
-    useEffect(() => {
-        return () => {
-            if (previewUrl && previewUrl.startsWith('blob:')) {
-                URL.revokeObjectURL(previewUrl);
-            }
-        };
-    }, [previewUrl]);
+    const getDummyPrice = (label) => {
+        if (!label) return 0;
+        let hash = 0;
+        for (let i = 0; i < label.length; i++) {
+            hash = label.charCodeAt(i) + ((hash << 5) - hash);
+        }
+        return ((Math.abs(hash) % 40) + 15);
+    };
+
+    const formatPrice = (val) => `Rs. ${val.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
+    const { subtotal, tax, total } = useMemo(() => {
+        const sub = pendingBill.reduce((sum, item) => sum + (item.price * item.qty), 0);
+        const t = sub * TAX_RATE;
+        const tot = sub + t;
+        return { subtotal: sub, tax: t, total: tot };
+    }, [pendingBill]);
 
     useEffect(() => {
         let isMounted = true;
+        async function loadData() {
+            try {
+                const data = await checkoutVisionService.getCheckoutData();
+                if (!isMounted) return;
+                setCheckoutKpis(data.kpis || []);
+                setTransactions(data.transactions || []);
+            } catch (err) {
+                console.error('Failed to fetch checkout data:', err);
+            } finally {
+                if (isMounted) setIsLoadingData(false);
+            }
+        }
+        loadData();
 
-        async function loadDefaultSample() {
+        // Load default sample image
+        const loadSample = async () => {
             try {
                 const response = await fetch(DEFAULT_SAMPLE_IMAGE);
                 const blob = await response.blob();
-                const defaultFile = new File([blob], 'multiproduct.png', { type: blob.type || 'image/png' });
-
-                if (!isMounted) return;
-
-                setSelectedFile(defaultFile);
-                setPreviewUrl(DEFAULT_SAMPLE_IMAGE);
-                setError('');
-            } catch (err) {
-                if (!isMounted) return;
-                setError('Could not load the default checkout sample image.');
-            } finally {
+                const file = new File([blob], 'multiproduct.png', { type: 'image/png' });
                 if (isMounted) {
-                    setIsLoadingSample(false);
+                    setSelectedFile(file);
+                    setPreviewUrl(DEFAULT_SAMPLE_IMAGE);
                 }
-            }
-        }
-
-        loadDefaultSample();
-
-        return () => {
-            isMounted = false;
+            } catch (e) { console.error('Failed to load sample', e); }
         };
+        loadSample();
+
+        return () => { isMounted = false; };
     }, []);
 
-    useEffect(() => {
-        if (!selectedFile || isLoadingSample || result || isAnalyzing) return;
-
-        const shouldAnalyzeDefaultSample =
-            selectedFile.name === 'multiproduct.png' && previewUrl === DEFAULT_SAMPLE_IMAGE;
-
-        if (!shouldAnalyzeDefaultSample) return;
-
-        handleAnalyze();
-        // Intentionally responds only to the default sample becoming ready.
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [selectedFile, isLoadingSample, previewUrl, result, isAnalyzing]);
-
-    const handleFileChange = (event) => {
-        const file = event.target.files?.[0];
-        if (previewUrl && previewUrl.startsWith('blob:')) {
-            URL.revokeObjectURL(previewUrl);
-        }
-        setSelectedFile(file || null);
-        setResult(null);
-        setError('');
-        setPreviewUrl(file ? URL.createObjectURL(file) : DEFAULT_SAMPLE_IMAGE);
-    };
-
-    const handleAnalyze = async () => {
-        if (!selectedFile) {
+    const handleAnalyze = async (fileToAnalyze = selectedFile) => {
+        if (!fileToAnalyze) {
             setError('Select an image before running checkout vision.');
             return;
         }
@@ -102,220 +110,388 @@ export default function CheckoutVisionPage() {
         setError('');
 
         try {
-            const data = await checkoutVisionService.analyzeImage(selectedFile);
+            const data = await checkoutVisionService.analyzeImage(fileToAnalyze);
             setResult(data);
+            
+            // Map detections to pending bill items
+            if (data.item_counts) {
+                const items = data.item_counts.map(([label, count]) => ({
+                    name: label,
+                    qty: count,
+                    price: getDummyPrice(label)
+                }));
+                setPendingBill(items);
+            }
+            
+            toast({
+                title: 'Scan Successful',
+                description: `Detected ${data.detections?.length || 0} items. Bill populated.`
+            });
         } catch (err) {
             setError(err.message || 'Checkout vision analysis failed.');
+            toast({
+                title: 'Analysis Failed',
+                description: err.message,
+                variant: 'destructive'
+            });
         } finally {
             setIsAnalyzing(false);
         }
     };
 
+    const handleCompleteCheckout = async (paymentMethod = 'Credit Card') => {
+        if (pendingBill.length === 0) return;
+
+        setIsSaving(true);
+        const transaction = {
+            id: `TXN-${Date.now()}`,
+            customer: `Guest #${Math.floor(Math.random() * 9000) + 1000}`,
+            timestamp: new Date().toISOString().replace('T', ' ').substring(0, 19),
+            items: pendingBill,
+            subtotal,
+            tax,
+            total,
+            paymentMethod,
+            status: 'Completed'
+        };
+
+        try {
+            await checkoutVisionService.saveTransaction(transaction);
+            setTransactions(prev => [transaction, ...prev]);
+            setPendingBill([]);
+            setResult(null);
+            
+            // Re-fetch KPIs to update total sales (simulated refresh)
+            const data = await checkoutVisionService.getCheckoutData();
+            setCheckoutKpis(data.kpis || []);
+
+            toast({
+                title: 'Transaction Successful',
+                description: `Bill ${transaction.id} has been saved and printed.`,
+            });
+        } catch (err) {
+            toast({
+                title: 'Checkout Failed',
+                description: err.message,
+                variant: 'destructive'
+            });
+        } finally {
+            setIsSaving(false);
+        }
+    };
+
+    const removeItem = (index) => {
+        setPendingBill(prev => prev.filter((_, i) => i !== index));
+    };
+
+    const handleFileChange = (event) => {
+        const file = event.target.files?.[0];
+        if (previewUrl && previewUrl.startsWith('blob:')) {
+            URL.revokeObjectURL(previewUrl);
+        }
+        setSelectedFile(file || null);
+        setResult(null);
+        setPendingBill([]);
+        setError('');
+        
+        if (file) {
+            setPreviewUrl(URL.createObjectURL(file));
+        } else {
+            setPreviewUrl(DEFAULT_SAMPLE_IMAGE);
+        }
+    };
+
     return (
-        <div className="min-h-screen bg-[#050505] px-6 py-8 text-white">
-            <div className="mx-auto flex w-full max-w-[1680px] flex-col gap-6">
-                <div className="flex flex-col gap-4 rounded-[28px] border border-white/10 bg-[radial-gradient(circle_at_top_left,rgba(245,158,11,0.15),transparent_30%),linear-gradient(135deg,rgba(18,18,18,0.96),rgba(8,8,8,0.98))] p-6 shadow-[0_20px_70px_rgba(0,0,0,0.45)]">
-                    <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
-                        <div className="space-y-2">
-                            <div className="inline-flex items-center gap-2 rounded-full border border-amber-400/20 bg-amber-500/10 px-3 py-1 text-xs uppercase tracking-[0.2em] text-amber-200">
-                                <Camera className="h-3.5 w-3.5" />
-                                Checkout Vision
-                            </div>
-                            <h1 className="text-3xl font-semibold tracking-tight">Verify lane items from a single shelf or checkout image</h1>
-                            <p className="max-w-3xl text-sm text-slate-400">
-                                Upload a lane capture, run multimodal classification, and review the annotated image, SKU counts, and OCR evidence inside the operations workspace.
-                            </p>
+        <div className="min-h-screen bg-[#0a0a0a] text-foreground font-sans selection:bg-blue-500/30 pb-20">
+            {/* Header */}
+            <header className="sticky top-0 z-30 bg-[#111] border-b border-[#222]">
+                <div className="px-6 pt-3">
+                    <Breadcrumb>
+                        <BreadcrumbList>
+                            <BreadcrumbItem>
+                                <BreadcrumbLink onClick={() => navigate('/')} className="flex items-center gap-1 text-gray-500 hover:text-blue-400 cursor-pointer text-[11px] transition-colors">
+                                    <Home className="w-3 h-3" /> Home
+                                </BreadcrumbLink>
+                            </BreadcrumbItem>
+                            <BreadcrumbSeparator className="text-gray-600" />
+                            <BreadcrumbItem>
+                                <BreadcrumbLink onClick={() => navigate('/control-tower')} className="flex items-center gap-1 text-gray-500 hover:text-blue-400 cursor-pointer text-[11px] transition-colors">
+                                    Control Tower
+                                </BreadcrumbLink>
+                            </BreadcrumbItem>
+                            <BreadcrumbSeparator className="text-gray-600" />
+                            <BreadcrumbItem>
+                                <BreadcrumbPage className="text-blue-400 text-[11px] font-medium">Checkout POS</BreadcrumbPage>
+                            </BreadcrumbItem>
+                        </BreadcrumbList>
+                    </Breadcrumb>
+                </div>
+                <div className="px-6 py-4 flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                        <div className="p-2 bg-purple-600/20 rounded-lg">
+                            <ShoppingCart className="w-6 h-6 text-purple-500" />
                         </div>
-
-                        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-                            <Card className="border-white/10 bg-white/[0.04]">
-                                <CardContent className="p-4">
-                                    <div className="text-xs uppercase tracking-[0.18em] text-slate-500">Detections</div>
-                                    <div className="mt-2 text-2xl font-semibold text-white">{totalDetections}</div>
-                                </CardContent>
-                            </Card>
-                            <Card className="border-white/10 bg-white/[0.04]">
-                                <CardContent className="p-4">
-                                    <div className="text-xs uppercase tracking-[0.18em] text-slate-500">Top Match</div>
-                                    <div className="mt-2 text-sm font-medium text-white">{topLabel}</div>
-                                </CardContent>
-                            </Card>
-                            <Card className="border-white/10 bg-white/[0.04]">
-                                <CardContent className="p-4">
-                                    <div className="text-xs uppercase tracking-[0.18em] text-slate-500">Status</div>
-                                    <div className="mt-2 text-sm font-medium text-emerald-300">
-                                        {isAnalyzing ? 'Running inference' : result ? 'Analysis complete' : 'Ready for upload'}
-                                    </div>
-                                </CardContent>
-                            </Card>
-                        </div>
-                    </div>
-
-                    <div className="grid gap-4 lg:grid-cols-[1.4fr_220px]">
-                        <div className="rounded-[24px] border border-white/10 bg-black/20 p-4">
-                            <label className="mb-3 block text-sm font-medium text-slate-300" htmlFor="checkout-image">
-                                Inference image
-                            </label>
-                            <div className="flex flex-col gap-3 md:flex-row">
-                                <Input
-                                    id="checkout-image"
-                                    type="file"
-                                    accept="image/*"
-                                    onChange={handleFileChange}
-                                    className="border-white/10 bg-white/[0.05] text-white file:mr-4 file:rounded-full file:border-0 file:bg-amber-500/20 file:px-4 file:py-2 file:text-sm file:font-medium file:text-amber-100 hover:file:bg-amber-500/30"
-                                />
-                                <Button
-                                    onClick={handleAnalyze}
-                                    disabled={isAnalyzing || isLoadingSample || !selectedFile}
-                                    className="min-w-[180px] bg-amber-600 text-white hover:bg-amber-500"
-                                >
-                                    {isAnalyzing ? (
-                                        <>
-                                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                            Running
-                                        </>
-                                    ) : isLoadingSample ? (
-                                        <>
-                                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                            Loading sample
-                                        </>
-                                    ) : (
-                                        <>
-                                            <ScanSearch className="mr-2 h-4 w-4" />
-                                            Run Analysis
-                                        </>
-                                    )}
-                                </Button>
-                            </div>
-                            {selectedFile && (
-                                <p className="mt-3 text-sm text-slate-400">
-                                    Selected: <span className="text-slate-200">{selectedFile.name}</span>
-                                </p>
-                            )}
-                            {!selectedFile && !isLoadingSample && (
-                                <p className="mt-3 text-sm text-slate-500">
-                                    The default sample could not be loaded. You can still upload an image manually.
-                                </p>
-                            )}
-                            {error && (
-                                <div className="mt-4 flex items-start gap-2 rounded-2xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-200">
-                                    <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
-                                    <span>{error}</span>
-                                </div>
-                            )}
-                        </div>
-
-                        <div className="rounded-[24px] border border-white/10 bg-white/[0.04] p-4">
-                            <div className="flex items-center gap-2 text-sm font-medium text-slate-300">
-                                <Upload className="h-4 w-4 text-amber-300" />
-                                Preview
-                            </div>
-                            <div className="mt-4 overflow-hidden rounded-2xl border border-white/10 bg-black/30">
-                                {previewUrl ? (
-                                    <img src={previewUrl} alt="Selected checkout preview" className="h-48 w-full object-cover" />
-                                ) : (
-                                    <div className="flex h-48 items-center justify-center px-4 text-center text-sm text-slate-500">
-                                        Add a shelf or checkout image to preview it here.
-                                    </div>
-                                )}
+                        <div>
+                            <h1 className="text-xl font-bold text-white tracking-tight flex items-center gap-2">
+                                AI Checkout POS <Badge className="bg-green-500/10 text-green-500 border-green-500/20 ml-2">Live</Badge>
+                            </h1>
+                            <div className="text-xs text-gray-400 font-mono mt-0.5 flex items-center gap-3">
+                                <span className="flex items-center"><Store className="w-3 h-3 mr-1" /> Lane 04 - Store #402</span>
+                                <span className="text-gray-600">|</span>
+                                <span className="flex items-center"><Clock className="w-3 h-3 mr-1" /> {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                             </div>
                         </div>
                     </div>
                 </div>
+            </header>
 
-                <div className="grid gap-6 xl:grid-cols-[1.8fr_0.95fr]">
-                    <Card className="border-white/10 bg-[#0d0d0d]">
-                        <CardHeader className="flex flex-row items-center justify-between border-b border-white/10">
-                            <div>
-                                <CardTitle className="text-2xl text-white">Annotated Checkout Image</CardTitle>
-                                <CardDescription className="text-slate-400">
-                                    Bounding boxes and predicted labels from the multimodal classifier.
-                                </CardDescription>
-                            </div>
-                            <Badge variant="outline" className="border-amber-400/30 bg-amber-500/10 text-amber-200">
-                                {result?.image_name || 'Awaiting analysis'}
-                            </Badge>
-                        </CardHeader>
-                        <CardContent className="p-6">
-                            {result?.annotated_base64 ? (
-                                <div className="overflow-hidden rounded-[28px] border border-white/10 bg-black p-3">
-                                    <img src={result.annotated_base64} alt="Annotated checkout" className="w-full rounded-[22px] object-contain" />
-                                </div>
-                            ) : (
-                                <div className="flex min-h-[420px] items-center justify-center rounded-[28px] border border-dashed border-white/10 bg-white/[0.02] text-center text-sm text-slate-500">
-                                    Run an analysis to render the annotated checkout image here.
-                                </div>
-                            )}
-                        </CardContent>
-                    </Card>
-
-                    <Card className="border-white/10 bg-[#0d0d0d]">
-                        <CardHeader className="border-b border-white/10">
-                            <CardTitle className="text-2xl text-white">Generated List</CardTitle>
-                            <CardDescription className="text-slate-400">
-                                Consolidated item counts from the current lane image.
-                            </CardDescription>
-                        </CardHeader>
-                        <CardContent className="space-y-3 p-6">
-                            {result?.item_counts?.length ? (
-                                result.item_counts.map(([label, count]) => (
-                                    <div key={`${label}-${count}`} className="flex items-center justify-between rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3">
-                                        <span className="max-w-[80%] text-sm text-slate-100">{label}</span>
-                                        <span className="rounded-full bg-amber-200 px-3 py-1 text-sm font-semibold text-amber-950">{count}</span>
+            <main className="flex-1 p-6 space-y-8 overflow-y-auto">
+                <div className="flex w-full flex-col gap-6">
+                    {/* KPI Snapshot */}
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                        {checkoutKpis.map((kpi, idx) => (
+                            <Card key={idx} className="bg-[#111] border-[#333] hover:border-blue-500/30 transition-all duration-300">
+                                <CardHeader className="pb-2">
+                                    <CardTitle className="text-[10px] font-bold text-gray-500 uppercase tracking-widest flex items-center gap-2">
+                                        {kpi.icon === 'ShoppingCart' && <ShoppingCart className="w-3 h-3" />}
+                                        {kpi.icon === 'Clock' && <Clock className="w-3 h-3" />}
+                                        {kpi.icon === 'Package' && <Package className="w-3 h-3" />}
+                                        {kpi.icon === 'ShieldCheck' && <ShieldCheck className="w-3 h-3" />}
+                                        {kpi.label}
+                                    </CardTitle>
+                                </CardHeader>
+                                <CardContent>
+                                    <div className="flex items-end justify-between">
+                                        <div className="text-2xl font-bold text-white leading-none">{kpi.value}</div>
+                                        <div className={`text-[11px] font-bold px-1.5 py-0.5 rounded ${kpi.status === 'success' ? 'bg-green-500/10 text-green-500' : 'bg-blue-500/10 text-blue-500'}`}>
+                                            {kpi.trend}
+                                        </div>
                                     </div>
-                                ))
-                            ) : (
-                                <div className="rounded-2xl border border-dashed border-white/10 bg-white/[0.02] px-4 py-8 text-center text-sm text-slate-500">
-                                    No detected items yet.
-                                </div>
-                            )}
-                        </CardContent>
-                    </Card>
-                </div>
+                                </CardContent>
+                            </Card>
+                        ))}
+                    </div>
 
-                <Card className="border-white/10 bg-[#0d0d0d]">
-                    <CardHeader className="border-b border-white/10">
-                        <CardTitle className="text-2xl text-white">Detection Evidence</CardTitle>
-                        <CardDescription className="text-slate-400">
-                            Product crops, confidence scores, and OCR output for each detected item.
-                        </CardDescription>
-                    </CardHeader>
-                    <CardContent className="p-6">
-                        {result?.detections?.length ? (
-                            <div className="grid gap-4 md:grid-cols-2 2xl:grid-cols-3">
-                                {result.detections.map((item, index) => (
-                                    <article key={`${item.prediction?.label || 'item'}-${index}`} className="overflow-hidden rounded-[24px] border border-white/10 bg-white/[0.03]">
-                                        <img src={item.crop_base64} alt={`Detection ${index + 1}`} className="h-56 w-full bg-black object-contain p-3" />
-                                        <div className="space-y-3 p-4">
-                                            <div className="flex items-start justify-between gap-4">
-                                                <div>
-                                                    <h3 className="text-lg font-semibold text-white">{item.prediction?.label}</h3>
-                                                    <p className="mt-1 text-xs uppercase tracking-[0.18em] text-slate-500">
-                                                        Confidence {formatPercent(item.prediction?.confidence)}
-                                                    </p>
+                    {/* POS Main Area */}
+                    <div className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
+                        {/* Left: Scan & Vision */}
+                        <div className="space-y-6">
+                            <Card className="bg-[#111] border-[#333] overflow-hidden relative">
+                                <div className="absolute top-0 right-0 w-32 h-32 bg-blue-600/5 blur-3xl pointer-events-none"></div>
+                                <CardHeader className="border-b border-[#222]">
+                                    <div className="flex items-center justify-between">
+                                        <div>
+                                            <CardTitle className="text-lg text-white flex items-center gap-2">
+                                                <Camera className="w-4 h-4 text-blue-400" /> AI Lane Scanner
+                                            </CardTitle>
+                                            <CardDescription className="text-xs text-gray-500">Capture or upload checkout image for auto-billing</CardDescription>
+                                        </div>
+                                        <Badge variant="outline" className="text-[10px] border-[#333] text-gray-400 uppercase tracking-tighter">
+                                            v2.4 Multimodal
+                                        </Badge>
+                                    </div>
+                                </CardHeader>
+                                <CardContent className="p-6">
+                                    <div className="flex flex-col gap-4">
+                                        <div className="grid grid-cols-1 md:grid-cols-[1fr_auto] gap-3 items-center">
+                                            <Input
+                                                id="checkout-image"
+                                                type="file"
+                                                accept="image/*"
+                                                onChange={handleFileChange}
+                                                className="h-10 p-0 border-[#333] bg-[#0a0a0a] text-white file:mr-4 file:rounded-md file:border-0 file:bg-[#222] file:px-4 file:h-full file:text-sm file:font-medium file:text-white hover:file:bg-[#333] cursor-pointer"
+                                            />
+                                            <Button
+                                                onClick={() => handleAnalyze()}
+                                                disabled={isAnalyzing || !selectedFile}
+                                                className="bg-blue-600 hover:bg-blue-700 text-white font-bold px-8 h-10 shadow-lg shadow-blue-600/20"
+                                            >
+                                                {isAnalyzing ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Scanning...</> : <><ScanSearch className="mr-2 h-4 w-4" /> Scan & Bill</>}
+                                            </Button>
+                                        </div>
+
+                                        <div className="relative aspect-video w-full overflow-hidden rounded-xl border border-[#222] bg-[#0a0a0a] flex items-center justify-center group">
+                                            {result?.annotated_base64 ? (
+                                                <img src={result.annotated_base64} alt="Annotated" className="w-full h-full object-contain" />
+                                            ) : previewUrl ? (
+                                                <img src={previewUrl} alt="Preview" className="w-full h-full object-contain opacity-50" />
+                                            ) : (
+                                                <div className="flex flex-col items-center gap-3 text-gray-600 text-center">
+                                                    <ImageIcon className="w-12 h-12 opacity-20" />
+                                                    <p className="text-sm">Awaiting camera feed or upload...</p>
                                                 </div>
-                                                <Badge variant="outline" className="border-emerald-400/20 bg-emerald-500/10 text-emerald-200">
-                                                    #{index + 1}
-                                                </Badge>
+                                            )}
+                                            {isAnalyzing && (
+                                                <div className="absolute inset-0 bg-black/60 backdrop-blur-sm flex flex-col items-center justify-center z-20">
+                                                    <Loader2 className="w-10 h-10 text-blue-500 animate-spin mb-4" />
+                                                    <div className="text-blue-400 font-mono text-sm animate-pulse">RUNNING AI INFERENCE...</div>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                </CardContent>
+                            </Card>
+
+                            {/* Detection Logic / Evidence */}
+                            {result?.detections && (
+                                <Card className="bg-[#111] border-[#333]">
+                                    <CardHeader className="border-b border-[#222] py-3">
+                                        <CardTitle className="text-sm font-bold text-gray-400 uppercase tracking-widest">Visual Evidence</CardTitle>
+                                    </CardHeader>
+                                    <CardContent className="p-4">
+                                        <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide">
+                                            {result.detections.slice(0, 6).map((det, idx) => (
+                                                <div key={idx} className="flex-shrink-0 w-24 space-y-2">
+                                                    <div className="aspect-square rounded-lg border border-[#333] bg-[#0a0a0a] p-1 flex items-center justify-center overflow-hidden">
+                                                        <img src={det.crop_base64} alt="Crop" className="w-full h-full object-contain" />
+                                                    </div>
+                                                    <div className="text-[10px] text-gray-500 truncate font-medium text-center">{det.prediction?.label}</div>
+                                                </div>
+                                            ))}
+                                            {result.detections.length > 6 && (
+                                                <div className="flex-shrink-0 w-24 aspect-square rounded-lg border border-dashed border-[#333] flex items-center justify-center text-xs text-gray-500">
+                                                    +{result.detections.length - 6} more
+                                                </div>
+                                            )}
+                                        </div>
+                                    </CardContent>
+                                </Card>
+                            )}
+                        </div>
+
+                        {/* Right: Billing Receipt */}
+                        <div className="space-y-6">
+                            <Card className="bg-[#111] border-[#333] flex flex-col h-full border-t-2 border-t-blue-600">
+                                <CardHeader className="border-b border-[#222] bg-[#0d0d0d]">
+                                    <div className="flex items-center justify-between">
+                                        <CardTitle className="text-lg text-white flex items-center gap-2">
+                                            <Receipt className="w-4 h-4 text-blue-400" /> Current Bill
+                                        </CardTitle>
+                                        <Button variant="ghost" size="sm" onClick={() => setPendingBill([])} className="text-gray-500 hover:text-red-400 h-8">
+                                            Clear
+                                        </Button>
+                                    </div>
+                                </CardHeader>
+                                <CardContent className="flex-1 p-0 overflow-hidden flex flex-col min-h-[500px]">
+                                    <div className="flex-1 overflow-y-auto p-4 space-y-4">
+                                        {pendingBill.length > 0 ? (
+                                            pendingBill.map((item, idx) => (
+                                                <div key={idx} className="flex items-center justify-between group">
+                                                    <div className="flex items-center gap-3">
+                                                        <div className="w-8 h-8 rounded bg-[#1a1a1a] flex items-center justify-center text-[10px] font-bold text-blue-400">
+                                                            {item.qty}x
+                                                        </div>
+                                                        <div>
+                                                            <div className="text-sm font-medium text-white">{item.name}</div>
+                                                            <div className="text-[10px] text-gray-500">@ {formatPrice(item.price)} each</div>
+                                                        </div>
+                                                    </div>
+                                                    <div className="flex items-center gap-4">
+                                                        <div className="text-sm font-bold text-white">{formatPrice(item.price * item.qty)}</div>
+                                                        <button onClick={() => removeItem(idx)} className="opacity-0 group-hover:opacity-100 transition-opacity text-gray-600 hover:text-red-400">
+                                                            <Trash2 className="w-3.5 h-3.5" />
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            ))
+                                        ) : (
+                                            <div className="h-full flex flex-col items-center justify-center text-center p-8 space-y-3">
+                                                <ShoppingCart className="w-12 h-12 text-gray-700 opacity-10" />
+                                                <p className="text-sm text-gray-500">No items detected.<br />Run a scan to start billing.</p>
                                             </div>
-                                            <div className="rounded-2xl border border-white/10 bg-black/20 p-3">
-                                                <div className="text-xs uppercase tracking-[0.18em] text-slate-500">OCR text</div>
-                                                <p className="mt-2 text-sm leading-6 text-slate-200">
-                                                    {item.ocr_text || 'No OCR text extracted.'}
-                                                </p>
+                                        )}
+                                    </div>
+
+                                    {/* Bill Footer */}
+                                    <div className="bg-[#0d0d0d] border-t border-[#222] p-6 space-y-4">
+                                        <div className="space-y-2">
+                                            <div className="flex justify-between text-xs text-gray-400">
+                                                <span>Subtotal</span>
+                                                <span>{formatPrice(subtotal)}</span>
+                                            </div>
+                                            <div className="flex justify-between text-xs text-gray-400 italic">
+                                                <span>GST (SGST 9% + CGST 9%)</span>
+                                                <span>{formatPrice(tax)}</span>
+                                            </div>
+                                            <div className="flex justify-between text-lg font-bold text-white pt-2 border-t border-[#333]">
+                                                <span>Grand Total</span>
+                                                <span className="text-green-400">{formatPrice(total)}</span>
                                             </div>
                                         </div>
-                                    </article>
-                                ))}
+
+                                        <div className="grid grid-cols-2 gap-3 pt-4">
+                                            <Button 
+                                                variant="outline" 
+                                                className="border-[#333] bg-transparent text-gray-300 hover:bg-[#1a1a1a] h-12"
+                                                onClick={() => handleCompleteCheckout('Cash')}
+                                                disabled={pendingBill.length === 0 || isSaving}
+                                            >
+                                                <Banknote className="mr-2 h-4 w-4" /> Cash
+                                            </Button>
+                                            <Button 
+                                                className="bg-blue-600 hover:bg-blue-700 text-white font-bold h-12"
+                                                onClick={() => handleCompleteCheckout('Credit Card')}
+                                                disabled={pendingBill.length === 0 || isSaving}
+                                            >
+                                                {isSaving ? <Loader2 className="animate-spin h-5 w-5" /> : <><CreditCard className="mr-2 h-4 w-4" /> Card/UPI</>}
+                                            </Button>
+                                        </div>
+                                    </div>
+                                </CardContent>
+                            </Card>
+                        </div>
+                    </div>
+
+                    {/* Transaction History Section */}
+                    <Card className="bg-[#111] border-[#333]">
+                        <CardHeader className="border-b border-[#222] flex flex-row items-center justify-between">
+                            <div>
+                                <CardTitle className="text-lg text-white">Recent Transactions</CardTitle>
+                                <CardDescription className="text-xs text-gray-500">Historical billing activity for the active lane</CardDescription>
                             </div>
-                        ) : (
-                            <div className="rounded-[28px] border border-dashed border-white/10 bg-white/[0.02] px-4 py-12 text-center text-sm text-slate-500">
-                                Detection cards will appear here after a successful analysis run.
-                            </div>
-                        )}
-                    </CardContent>
-                </Card>
-            </div>
+                            <Button variant="outline" className="border-[#333] text-xs h-8">View All</Button>
+                        </CardHeader>
+                        <CardContent className="p-0">
+                            <Table>
+                                <TableHeader className="bg-[#0d0d0d]">
+                                    <TableRow className="border-[#222] hover:bg-transparent">
+                                        <TableHead className="text-gray-500 font-bold uppercase text-[10px]">Transaction ID</TableHead>
+                                        <TableHead className="text-gray-500 font-bold uppercase text-[10px]">Customer</TableHead>
+                                        <TableHead className="text-gray-500 font-bold uppercase text-[10px]">Timestamp</TableHead>
+                                        <TableHead className="text-gray-500 font-bold uppercase text-[10px]">Items</TableHead>
+                                        <TableHead className="text-gray-500 font-bold uppercase text-[10px]">Total Amount</TableHead>
+                                        <TableHead className="text-gray-500 font-bold uppercase text-[10px]">Payment</TableHead>
+                                        <TableHead className="text-gray-500 font-bold uppercase text-[10px]">Status</TableHead>
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                    {transactions.map((txn, idx) => (
+                                        <TableRow key={idx} className="border-[#222] hover:bg-[#1a1a1a]/50">
+                                            <TableCell className="font-mono text-xs text-blue-400">{txn.id}</TableCell>
+                                            <TableCell className="text-sm text-gray-300 font-medium">{txn.customer}</TableCell>
+                                            <TableCell className="text-xs text-gray-500">{txn.timestamp}</TableCell>
+                                            <TableCell className="text-xs text-gray-400">
+                                                {txn.items.length} items
+                                            </TableCell>
+                                            <TableCell className="text-sm font-bold text-white">{formatPrice(txn.total)}</TableCell>
+                                            <TableCell>
+                                                <Badge variant="outline" className="text-[10px] font-normal border-[#333] text-gray-400">
+                                                    {txn.paymentMethod}
+                                                </Badge>
+                                            </TableCell>
+                                            <TableCell>
+                                                <div className="flex items-center gap-1.5 text-xs text-green-500 font-medium">
+                                                    <CheckCircle2 className="w-3.5 h-3.5" /> {txn.status}
+                                                </div>
+                                            </TableCell>
+                                        </TableRow>
+                                    ))}
+                                </TableBody>
+                            </Table>
+                        </CardContent>
+                    </Card>
+                </div>
+            </main>
         </div>
     );
 }

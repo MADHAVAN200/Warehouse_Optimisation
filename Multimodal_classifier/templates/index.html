@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Product Shelf Analyzer</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+  <main class="shell">
+    <section class="hero">
+      <p class="eyebrow">Checkout Vision Console</p>
+      <h1>Quick Checkout</h1>
+    </section>
+
+    <section class="panel controls">
+      <form method="post" action="{{ url_for('analyze') }}">
+        <label for="image_name">Inference image</label>
+        <div class="form-row">
+          <select id="image_name" name="image_name">
+            {% for image in images %}
+            <option value="{{ image }}" {% if image == selected_image %}selected{% endif %}>{{ image }}</option>
+            {% endfor %}
+          </select>
+          <button type="submit">Run analysis</button>
+        </div>
+      </form>
+      {% if error %}
+      <p class="error">{{ error }}</p>
+      {% endif %}
+    </section>
+
+    {% if result %}
+    <section class="grid">
+      <article class="panel">
+        <div class="panel-head">
+          <h2>Checkout Image</h2>
+          <span>{{ result.image_name }}</span>
+        </div>
+        <img class="stage" src="{{ result.annotated_base64 }}" alt="Annotated shelf image">
+      </article>
+
+      <article class="panel">
+        <div class="panel-head">
+          <h2>Generated List</h2>
+          <span>{{ result.detections|length }} detected items</span>
+        </div>
+        {% if result.item_counts %}
+        <ul class="summary-list">
+          {% for label, count in result.item_counts %}
+          <li><span>{{ label }}</span><strong>{{ count }}</strong></li>
+          {% endfor %}
+        </ul>
+        {% else %}
+        <p class="empty">No checkout items were detected in this image.</p>
+        {% endif %}
+      </article>
+    </section>
+
+    <section class="panel">
+      <div class="panel-head">
+        <h2>Crops and OCR</h2>
+        <span>Per-product detail</span>
+      </div>
+      {% if result.detections %}
+      <div class="cards">
+        {% for item in result.detections %}
+        <article class="card">
+          <img src="{{ item.crop_base64 }}" alt="Product crop {{ loop.index }}">
+          <div class="card-copy">
+            <h3>{{ item.prediction.label }}</h3>
+            <p class="confidence">confidence {{ '%.2f'|format(item.prediction.confidence * 100) }}%</p>
+            <p class="ocr">{{ item.ocr_text if item.ocr_text else 'No OCR text extracted.' }}</p>
+          </div>
+        </article>
+        {% endfor %}
+      </div>
+      {% else %}
+      <p class="empty">No crops available.</p>
+      {% endif %}
+    </section>
+    {% endif %}
+  </main>
+</body>
+</html>
