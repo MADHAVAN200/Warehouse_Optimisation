@@ -1,6 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import mlRoutes from './routes/mlRoutes.js';
+import recommendationRoutes from './routes/recommendationRoutes.js';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -35,6 +36,7 @@ app.use(express.json());
 
 // API Routes
 app.use('/api', mlRoutes);
+app.use('/api/recommendations', recommendationRoutes);
 
 
 const PORT = process.env.PORT || 3001;

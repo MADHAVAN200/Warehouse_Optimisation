@@ -26,6 +26,9 @@ dist-ssr/
 # ML Models and Data (except training_report.json)
 *.pkl
 __pycache__/
+.venv/
+venv/
+env/
 *.ipynb_checkpoints/
 backend/uploads/
 backend/ml/checkout_vision/weights/

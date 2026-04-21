@@ -14,40 +14,44 @@ body {
 
 @layer base {
   :root {
-    --background: 0 0% 3.9%;
-    --foreground: 0 0% 98%;
-    --card: 0 0% 3.9%;
-    --card-foreground: 0 0% 98%;
-    --popover: 0 0% 3.9%;
-    --popover-foreground: 0 0% 98%;
-    --primary: 0 0% 98%;
-    --primary-foreground: 0 0% 9%;
-    --secondary: 0 0% 14.9%;
-    --secondary-foreground: 0 0% 98%;
-    --muted: 0 0% 14.9%;
-    --muted-foreground: 0 0% 63.9%;
-    --accent: 0 0% 14.9%;
-    --accent-foreground: 0 0% 98%;
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+    --primary: 221.2 83.2% 53.3%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 47.4% 11.2%;
     --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 0 0% 14.9%;
-    --input: 0 0% 14.9%;
-    --ring: 0 0% 83.1%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 221.2 83.2% 53.3%;
     --chart-1: 220 70% 50%;
     --chart-2: 160 60% 45%;
     --chart-3: 30 80% 55%;
     --chart-4: 280 65% 60%;
     --chart-5: 340 75% 55%;
     --radius: 0.5rem;
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --sidebar-background: 210 40% 98%;
+    --sidebar-foreground: 222.2 84% 4.9%;
+    --sidebar-primary: 221.2 83.2% 53.3%;
+    --sidebar-primary-foreground: 210 40% 98%;
+    --sidebar-accent: 210 40% 94%;
+    --sidebar-accent-foreground: 222.2 47.4% 11.2%;
+    --sidebar-border: 214.3 31.8% 91.4%;
+    --sidebar-ring: 221.2 83.2% 53.3%;
+    --scrollbar-track: hsl(210 40% 97%);
+    --scrollbar-thumb: hsl(215 20% 80%);
+    --scrollbar-thumb-hover: hsl(215 20% 68%);
   }
+
   .dark {
     --background: 0 0% 3.9%;
     --foreground: 0 0% 98%;
@@ -81,6 +85,9 @@ body {
     --sidebar-accent-foreground: 240 4.8% 95.9%;
     --sidebar-border: 240 3.7% 15.9%;
     --sidebar-ring: 217.2 91.2% 59.8%;
+    --scrollbar-track: hsl(0 0% 8%);
+    --scrollbar-thumb: hsl(0 0% 24%);
+    --scrollbar-thumb-hover: hsl(0 0% 35%);
   }
 }
 
@@ -91,4 +98,86 @@ body {
   body {
     @apply bg-background text-foreground;
   }
+
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+  }
+
+  *::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+
+  *::-webkit-scrollbar-track {
+    background: var(--scrollbar-track);
+  }
+
+  *::-webkit-scrollbar-thumb {
+    background-color: var(--scrollbar-thumb);
+    border-radius: 999px;
+    border: 2px solid var(--scrollbar-track);
+  }
+
+  *::-webkit-scrollbar-thumb:hover {
+    background-color: var(--scrollbar-thumb-hover);
+  }
+}
+
+/*
+ * Light-mode compatibility for legacy hardcoded dark utility classes.
+ * This keeps old pages visually aligned with white mode without changing every file at once.
+ */
+:root:not(.dark) .bg-\[\#0a0a0a\],
+:root:not(.dark) .bg-\[\#050505\],
+:root:not(.dark) .bg-\[\#0f0f0f\],
+:root:not(.dark) .bg-\[\#111\],
+:root:not(.dark) .bg-\[\#0a0a0a\]\/95,
+:root:not(.dark) .bg-\[\#111\]\/90 {
+  background-color: hsl(var(--card)) !important;
+}
+
+:root:not(.dark) .bg-\[\#1a1a1a\],
+:root:not(.dark) .bg-\[\#161616\],
+:root:not(.dark) .bg-\[\#141414\],
+:root:not(.dark) .bg-\[\#151515\],
+:root:not(.dark) .bg-\[\#0d0d0d\],
+:root:not(.dark) .bg-\[\#222\],
+:root:not(.dark) .bg-\[\#151515\]\/50,
+:root:not(.dark) .bg-\[\#1a1a1a\]\/50,
+:root:not(.dark) .bg-\[\#222\]\/50 {
+  background-color: hsl(var(--muted)) !important;
+}
+
+:root:not(.dark) .from-\[\#151515\],
+:root:not(.dark) .to-\[\#111\] {
+  --tw-gradient-from: hsl(var(--muted)) var(--tw-gradient-from-position) !important;
+  --tw-gradient-to: hsl(var(--card)) var(--tw-gradient-to-position) !important;
+}
+
+:root:not(.dark) .border-\[\#222\],
+:root:not(.dark) .border-\[\#333\],
+:root:not(.dark) .border-\[\#444\],
+:root:not(.dark) .border-r.border-\[\#222\],
+:root:not(.dark) .border-l.border-\[\#222\],
+:root:not(.dark) .border-b.border-\[\#222\] {
+  border-color: hsl(var(--border)) !important;
+}
+
+:root:not(.dark) .text-white,
+:root:not(.dark) .hover\:text-white:hover {
+  color: hsl(var(--foreground)) !important;
+}
+
+:root:not(.dark) .text-gray-500,
+:root:not(.dark) .text-gray-600,
+:root:not(.dark) .text-gray-400,
+:root:not(.dark) .text-gray-300,
+:root:not(.dark) .text-gray-200 {
+  color: hsl(var(--muted-foreground)) !important;
+}
+
+:root:not(.dark) .hover\:bg-\[\#1a1a1a\]:hover,
+:root:not(.dark) .hover\:bg-\[\#222\]:hover {
+  background-color: hsl(var(--accent)) !important;
 }

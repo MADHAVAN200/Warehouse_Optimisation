@@ -7,10 +7,7 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint . --ext js,jsx --report-unused-disable-directives --max-warnings 0",
-    "preview": "vite preview",
-    "seed:events": "node database/seed_live_events.js",
-    "seed:trends": "node database/seed_trend_data.js",
-    "seed:weather": "node database/seed_weather_data.js"
+    "preview": "vite preview"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.1",
