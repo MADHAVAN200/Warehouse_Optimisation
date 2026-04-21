@@ -216,6 +216,21 @@ export const moduleDataSeed = {
             { id: 3, time: '10:30:15', event: 'Store-055 connection timeout - dropped from round', type: 'error' }
         ]
     },
+    vendorPortal: {
+        products: [
+            { id: 'VP-P-0001', name: 'Organic Hass Avocados', sku: 'SKU-9928', category: 'Produce', activeStores: 142, trend: 'up', stockStatus: 'Low', lastUpdated: '2h ago', region: 'North' }
+        ],
+        requests: [
+            { id: 'VP-R-0001', type: 'Supply Increase', product: 'Organic Hass Avocados', reason: 'Projected Demand Spike', date: '2026-04-21', status: 'Pending', urgency: 'High', city: 'Seattle' }
+        ],
+        requestActions: [],
+        compliance: [
+            { id: 'VP-C-0001', metric: 'Quality Check Pass Rate', status: 'Healthy', value: 98.5, target: 98.0, updatedAt: '2026-04-21' }
+        ],
+        documents: [
+            { id: 'VP-D-0001', name: 'ISO 9001 Certification', validUntil: '2026-12-31', status: 'Active', type: 'Certification' }
+        ]
+    },
     checkout: {
         kpis: [
             { label: 'Total Daily Revenue', value: 'Rs. 58,420.00', trend: '+12.5%', status: 'success', icon: 'ShoppingCart' },
